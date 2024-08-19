@@ -1,11 +1,10 @@
 ---@diagnostic disable: undefined-global, undefined-field
-local tokens = require("tokens")
-local parser = require("parser")
-local lexer = require("lexer")
-local ast = require('ast')
-local say = require("say")
+local tokens = require("components.tokens")
+local parser = require("components.parser")
+local lexer = require("components.lexer")
+local ast = require('components.ast')
 
-require("utility")
+require("utility.utility")
 
 local function expect(what, expr)
 	assert.are_equal(what, typeof(expr),

@@ -1,4 +1,4 @@
-local rppl = require("rppl")
+local rppl = require("utility.rppl")
 
 local function main()
   print("Monkey RPPL:")

@@ -1,5 +1,5 @@
-local oo = require("oo")
-local tokens = require("tokens")
+local oo = require("utility.oo")
+local tokens = require("components.tokens")
 
 ---@param type string The token type
 ---@param literal string | number The literal char 

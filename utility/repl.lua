@@ -6,7 +6,7 @@ REPL reads input, sends it to the interpreter for evaluation, prints the result/
 interpreter and starts again. Read, Eval, Print, Loop.
 ]]
 
-local lexer = require("lexer")
+local lexer = require("components.lexer")
 
 local repl = {}
 local PROMPT = ">> "

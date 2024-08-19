@@ -1,9 +1,8 @@
-local oo = require("oo")
-local ast = require("ast")
-local lexer = require("lexer")
-local tokens = require("tokens")
+local oo = require("utility.oo")
+local ast = require("components.ast")
+local tokens = require("components.tokens")
 
-require("utility")
+require("utility.utility")
 
 ---@enum constant
 local constants = {

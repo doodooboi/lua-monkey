@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, undefined-field
-local tokens = require("tokens")
-local lexer = require("lexer")
+local tokens = require("components.tokens")
+local lexer = require("components.lexer")
 
 describe("the lexer", function()
 	it("can do basic symbols", function()

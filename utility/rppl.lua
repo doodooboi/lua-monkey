@@ -1,7 +1,7 @@
 -- Almost identical to the REPL except this is a Read-Parse-Print-Loop
 
-local lexer = require("lexer")
-local parser = require("parser")
+local lexer = require("components.lexer")
+local parser = require("components.parser")
 
 local rppl = {}
 local PROMPT = ">> "
