@@ -1,9 +1,9 @@
-local repl = require("repl")
+local rppl = require("rppl")
 
 local function main()
-  print("Monkey REPL:")
+  print("Monkey RPPL:")
 	print(" Press CTRL-C or type exit to exit.")
-  repl.Start()
+  rppl.Start()
 end
 
 main()
