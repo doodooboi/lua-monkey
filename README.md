@@ -4,6 +4,7 @@ An implementation of the Monkey interpreted programming language using Lua 5.4
 ## Progress
 * Basic lexing
 * Basic parsing
+* Basic evaluation
 
 ## Installation
 ### Usage
