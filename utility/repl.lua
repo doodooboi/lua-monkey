@@ -8,6 +8,7 @@ interpreter and starts again. Read, Eval, Print, Loop.
 
 local lexer = require("components.lexer")
 local parser = require("components.parser")
+local object = require("components.object")
 
 require("components.evaluator")
 
@@ -17,6 +18,8 @@ local PROMPT = ">> "
 function repl.Start()
   print("Monkey REPL:")
 	print(" Press CTRL-C or type exit to exit.")
+
+  local env = object.Environment.new()
 
   while true do
     io.write(PROMPT)
@@ -40,7 +43,7 @@ function repl.Start()
         return
       end
 
-      local evaluated = eval(program)
+      local evaluated = eval(program, env)
       if evaluated then
         print(evaluated:Inspect())
       end

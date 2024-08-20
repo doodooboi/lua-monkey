@@ -47,12 +47,13 @@ local function truthy(node)
 end
 
 ---@param node Program
+---@param env Environment
 ---@return BaseObject
-local function evalProgram(node)
+local function evalProgram(node, env)
     local result = nil
 
     for _, stmt in ipairs(node.Statements) do
-        result = eval(stmt)
+        result = eval(stmt, env)
 
         if result and result:Type() == object.types.RETURN_VALUE_OBJ then
             ---@cast result ReturnValue
@@ -156,29 +157,31 @@ local function evalInfixExpression(operator, left, right)
 end
 
 ---@param node IfExpression
+---@param env Environment
 ---@return BaseObject
-local function evalIfExpression(node)
-    local condition = eval(node.Condition)
+local function evalIfExpression(node, env)
+    local condition = eval(node.Condition, env)
     if isError(condition) then
         return condition
     end
 
     if truthy(condition) then
-        return eval(node.Consequence)
+        return eval(node.Consequence, env)
     elseif node.Alternative then
-        return eval(node.Alternative)
+        return eval(node.Alternative, env)
     end
 
     return constants.NULL
 end
 
 ---@param node BlockStatement
+---@param env Environment
 ---@return BaseObject
-local function evalBlockStatement(node)
+local function evalBlockStatement(node, env)
     local result = nil
 
     for _, statement in ipairs(node.Statements) do
-        result = eval(statement)
+        result = eval(statement, env)
 
         if result and (result:Type() == object.types.RETURN_VALUE_OBJ or result:Type() == object.types.ERROR_OBJ) then
             return result
@@ -188,24 +191,37 @@ local function evalBlockStatement(node)
     return result
 end
 
+---@param node Identifier
+---@param env Environment
+local function evalIdentifier(node, env)
+    local value, ok = env:get(node.Value)
+
+    if not ok then
+        return newError("identifier not found: %s", node.Value)
+    end
+
+    return value
+end
+
 ---@param node Node
-function eval(node)
+---@param env Environment
+function eval(node, env)
     local type = typeof(node)
 
     -- Statements
     if type == "Program" then
         ---@cast node Program
-        return evalProgram(node)
+        return evalProgram(node, env)
     elseif type == "ExpressionStatement" then
         ---@cast node ExpressionStatement
-        return eval(node.Expression)
+        return eval(node.Expression, env)
     elseif type == "BlockStatement" then
         ---@cast node BlockStatement
 
-        return evalBlockStatement(node)
+        return evalBlockStatement(node, env)
     elseif type == "ReturnStatement" then
         ---@cast node ReturnStatement
-        local value = eval(node.ReturnValue)
+        local value = eval(node.ReturnValue, env)
 
         if isError(value) then
             return value
@@ -214,10 +230,17 @@ function eval(node)
         return object.ReturnValue.new(value)
     elseif type == "LetStatement" then
         ---@cast node LetStatement
-        local value = eval(node.Value)
+        local value = eval(node.Value, env)
         if isError(value) then
             return value
         end
+
+        env:set(node.Name.Value, value)
+    end
+
+    if type == "Identifier" then
+        ---@cast node Identifier
+        return evalIdentifier(node, env)
     end
 
     -- Expressions
@@ -230,7 +253,7 @@ function eval(node)
         return boolToObject(node.Value)
     elseif type == "PrefixExpression" then
         ---@cast node PrefixExpression
-        local right = eval(node.Right)
+        local right = eval(node.Right, env)
 
         if isError(right) then
             return right
@@ -240,12 +263,12 @@ function eval(node)
     elseif type == "InfixExpression" then
         ---@cast node InfixExpression
 
-        local left = eval(node.Left)
+        local left = eval(node.Left, env)
         if isError(left) then
             return left
         end
 
-        local right = eval(node.Right)
+        local right = eval(node.Right, env)
         if isError(right) then
             return right
         end
@@ -254,6 +277,6 @@ function eval(node)
     elseif type == "IfExpression" then
         ---@cast node IfExpression
 
-        return evalIfExpression(node)
+        return evalIfExpression(node, env)
     end
 end

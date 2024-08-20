@@ -13,7 +13,8 @@ local function testEval(input)
 	local parsed = parser.new(lexed)
 
 	local program = parsed:ParseProgram()
-	return eval(program)
+
+	return eval(program, object.Environment.new())
 end
 
 ---@param what string
