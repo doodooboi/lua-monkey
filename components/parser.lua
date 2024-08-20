@@ -38,6 +38,8 @@ local precedences = {
 ---@alias prefixParseFn fun(): Expression
 ---@alias infixParseFn fun(expr: Expression): Expression
 
+-- TODO: Update types
+
 ---@class Parser
 ---@field lexer lexer
 ---@field curToken token

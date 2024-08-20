@@ -7,25 +7,42 @@ interpreter and starts again. Read, Eval, Print, Loop.
 ]]
 
 local lexer = require("components.lexer")
+local parser = require("components.parser")
+
+require("components.evaluator")
 
 local repl = {}
 local PROMPT = ">> "
 
 function repl.Start()
+  print("Monkey REPL:")
+	print(" Press CTRL-C or type exit to exit.")
+
   while true do
     io.write(PROMPT)
     local input = io.read()
 
-		if input == 'exit' then
-			break
-		end
+    if input == 'exit' then
+      break
+    end
 
     if #input > 0 then
       local lineLexer = lexer.new(input)
+      local parsed = parser.new(lineLexer)
 
-      for token in lineLexer:iterateTokens() do
-        if token.Type == "EOF" then break end
-        print("{Type: "..token.Type..", Literal: "..token.Literal.."}")
+      local program = parsed:ParseProgram()
+      if #parsed.errors > 0 then
+        print("Encountered " .. #parsed.errors .. " parsing errors!")
+        for _, err in ipairs(parsed.errors) do
+          print("  " .. err)
+        end
+
+        return
+      end
+
+      local evaluated = eval(program)
+      if evaluated then
+        print(evaluated:Inspect())
       end
     end
   end

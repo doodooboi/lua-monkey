@@ -234,10 +234,10 @@ function IntegerLiteral:__tostring()
 end
 IntegerLiteral.__metatable = "IntegerLiteral"
 
----@class Boolean: Expression
+---@class BooleanLiteral: Expression
 ---@field Token token
 ---@field Value boolean
----@field new fun(token: token, value: boolean): Boolean
+---@field new fun(token: token, value: boolean): BooleanLiteral
 Boolean = oo.class(Expression)
 function Boolean:init(token, value)
 	Expression.init(self)
@@ -257,7 +257,7 @@ end
 function Boolean:__tostring()
 	return self.Token.Literal
 end
-Boolean.__metatable = "Boolean"
+Boolean.__metatable = "BooleanLiteral"
 
 ---@class IfExpression: Expression
 ---@field Token token
@@ -408,9 +408,8 @@ function CallExpression:__tostring()
 end
 CallExpression.__metatable = "CallExpression"
 
----@class Program
+---@class Program: Node
 ---@field Statements Statement[]
----@field TokenLiteral fun(self: Program): string
 ---@field new fun(): Program
 Program = oo.class()
 function Program:init()

@@ -60,8 +60,8 @@ end
 ---@param expr Expression
 ---@param value string -- The expected identifier
 local function testBooleanLiteral(expr, value)
-	assert.are_equal("Boolean", typeof(expr),
-		string.format("Expected expression to be an Boolean, got %s", typeof(expr))
+	assert.are_equal("BooleanLiteral", typeof(expr),
+		string.format("Expected expression to be an BooleanLiteral, got %s", typeof(expr))
 	)
 
 	assert.are_equal(value, expr.Value,
