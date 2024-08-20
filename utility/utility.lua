@@ -9,6 +9,10 @@ function typeof(obj)
 		return mt
 	end
 
+	if obj and obj.Type and type(obj.Type) == "function" then
+		return obj:Type()
+	end
+
 	return type(obj)
 end
 
