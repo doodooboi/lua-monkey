@@ -7,6 +7,8 @@ local types = {
     INTEGER_OBJ = "INTEGER",
     BOOLEAN_OBJ = "BOOLEAN",
     NULL_OBJ = "NULL",
+
+    RETURN_VALUE_OBJ = "RETURN"
 }
 
 ---@class BaseObject
@@ -41,7 +43,6 @@ end
 function Integer:Type()
     return types.INTEGER_OBJ
 end
-Integer.__metatable = "Integer"
 
 ---@class Boolean: BaseObject
 ---@field Value boolean
@@ -61,7 +62,25 @@ end
 function Boolean:Type()
     return types.BOOLEAN_OBJ
 end
-Boolean.__metatable = "Boolean"
+
+---@class ReturnValue: BaseObject
+---@field Value BaseObject
+---@field new fun(value: BaseObject): ReturnValue
+local ReturnValue = oo.class(BaseObject)
+
+function ReturnValue:init(value)
+    BaseObject.init(self)
+
+    self.Value = value
+end
+
+function ReturnValue:Inspect()
+    return self.Value:Inspect()
+end
+
+function ReturnValue:Type()
+    return types.RETURN_VALUE_OBJ
+end
 
 ---@class Null: BaseObject
 ---@field new fun(): Null
@@ -78,12 +97,12 @@ end
 function Null:Type()
     return types.NULL_OBJ
 end
-Null.__metatable = "Null"
 
 return {
     Integer = Integer,
     Boolean = Boolean,
     Null = Null,
+    ReturnValue = ReturnValue,
 
     types = types
 }

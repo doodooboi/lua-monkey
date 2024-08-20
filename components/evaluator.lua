@@ -1,6 +1,5 @@
 ---@diagnostic disable: lowercase-global
 local object = require("components.object")
-local ast = require("components.ast")
 
 require("utility.utility")
 
@@ -30,13 +29,18 @@ local function truthy(node)
     return true
 end
 
----@param stmts Statement[]
+---@param node Program
 ---@return BaseObject
-local function evalStatements(stmts)
+local function evalProgram(node)
     local result = nil
 
-    for _, stmt in ipairs(stmts) do
+    for _, stmt in ipairs(node.Statements) do
         result = eval(stmt)
+
+        if result and result:Type() == object.types.RETURN_VALUE_OBJ then
+            ---@cast result ReturnValue
+            return result.Value
+        end
     end
 
     return result
@@ -141,6 +145,22 @@ local function evalIfExpression(node)
     return constants.NULL
 end
 
+---@param node BlockStatement
+---@return BaseObject
+local function evalBlockStatement(node)
+    local result = nil
+
+    for _, statement in ipairs(node.Statements) do
+        result = eval(statement)
+
+        if result and result:Type() == object.types.RETURN_VALUE_OBJ then
+            return result
+        end
+    end
+
+    return result
+end
+
 ---@param node Node
 function eval(node)
     local type = typeof(node)
@@ -148,16 +168,18 @@ function eval(node)
     -- Statements
     if type == "Program" then
         ---@cast node Program
-        return evalStatements(node.Statements)
-    end
-
-    if type == "ExpressionStatement" then
+        return evalProgram(node)
+    elseif type == "ExpressionStatement" then
         ---@cast node ExpressionStatement
         return eval(node.Expression)
     elseif type == "BlockStatement" then
         ---@cast node BlockStatement
         
-        return evalStatements(node.Statements)
+        return evalBlockStatement(node)
+    elseif type == "ReturnStatement" then
+        ---@cast node ReturnStatement
+        
+        return object.ReturnValue.new(eval(node.ReturnValue))
     end
 
     -- Expressions
