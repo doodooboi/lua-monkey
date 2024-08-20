@@ -19,6 +19,23 @@ local function boolToObject(bool)
     end
 end
 
+---@param obj BaseObject
+---@return boolean
+local function isError(obj)
+    if obj then
+        return obj:Type() == object.types.ERROR_OBJ
+    end
+
+    return false
+end
+
+---@param format string
+---@param ... string
+---@return Error
+local function newError(format, ...)
+    return object.Error.new(string.format(format, ...))
+end
+
 ---@param node BaseObject
 ---@return boolean
 local function truthy(node)
@@ -39,7 +56,10 @@ local function evalProgram(node)
 
         if result and result:Type() == object.types.RETURN_VALUE_OBJ then
             ---@cast result ReturnValue
+
             return result.Value
+        elseif result and result:Type() == object.types.ERROR_OBJ then
+            return result
         end
     end
 
@@ -61,7 +81,7 @@ end
 ---@return BaseObject
 local function evalMinusPrefixExpression(right)
     if right:Type() ~= object.types.INTEGER_OBJ then
-        return constants.NULL
+        return newError("unknown operator: -%s", right:Type())
     end
 
     ---@cast right Integer
@@ -78,7 +98,7 @@ local function evalPrefixExpression(operator, right)
         return evalMinusPrefixExpression(right)
     end
 
-    return constants.NULL
+    return newError("unknown operator: %s%s", operator, right:Type())
 end
 
 ---@param operator string
@@ -106,7 +126,7 @@ local function evalIntegerInfixExpression(operator, left, right)
         return boolToObject(left.Value ~= right.Value)
     end
 
-    return constants.NULL
+    return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
 end
 
 
@@ -118,8 +138,12 @@ local function evalInfixExpression(operator, left, right)
     if left:Type() == object.types.INTEGER_OBJ and right:Type() == object.types.INTEGER_OBJ then
         ---@cast left Integer
         ---@cast right Integer
-  
+
         return evalIntegerInfixExpression(operator, left, right)
+    end
+
+    if left:Type() ~= right:Type() then
+        return newError("type mismatch: %s %s %s", left:Type(), operator, right:Type())
     end
 
     if operator == "==" then
@@ -128,13 +152,16 @@ local function evalInfixExpression(operator, left, right)
         return boolToObject(left ~= right)
     end
 
-    return constants.NULL
+    return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
 end
 
 ---@param node IfExpression
 ---@return BaseObject
 local function evalIfExpression(node)
     local condition = eval(node.Condition)
+    if isError(condition) then
+        return condition
+    end
 
     if truthy(condition) then
         return eval(node.Consequence)
@@ -153,7 +180,7 @@ local function evalBlockStatement(node)
     for _, statement in ipairs(node.Statements) do
         result = eval(statement)
 
-        if result and result:Type() == object.types.RETURN_VALUE_OBJ then
+        if result and (result:Type() == object.types.RETURN_VALUE_OBJ or result:Type() == object.types.ERROR_OBJ) then
             return result
         end
     end
@@ -174,12 +201,23 @@ function eval(node)
         return eval(node.Expression)
     elseif type == "BlockStatement" then
         ---@cast node BlockStatement
-        
+
         return evalBlockStatement(node)
     elseif type == "ReturnStatement" then
         ---@cast node ReturnStatement
-        
-        return object.ReturnValue.new(eval(node.ReturnValue))
+        local value = eval(node.ReturnValue)
+
+        if isError(value) then
+            return value
+        end
+
+        return object.ReturnValue.new(value)
+    elseif type == "LetStatement" then
+        ---@cast node LetStatement
+        local value = eval(node.Value)
+        if isError(value) then
+            return value
+        end
     end
 
     -- Expressions
@@ -188,25 +226,34 @@ function eval(node)
         return object.Integer.new(node.Value)
     elseif type == "BooleanLiteral" then
         ---@cast node BooleanLiteral
-        
+
         return boolToObject(node.Value)
     elseif type == "PrefixExpression" then
         ---@cast node PrefixExpression
         local right = eval(node.Right)
 
+        if isError(right) then
+            return right
+        end
+
         return evalPrefixExpression(node.Operator, right)
     elseif type == "InfixExpression" then
         ---@cast node InfixExpression
-        
+
         local left = eval(node.Left)
+        if isError(left) then
+            return left
+        end
+
         local right = eval(node.Right)
+        if isError(right) then
+            return right
+        end
 
         return evalInfixExpression(node.Operator, left, right)
     elseif type == "IfExpression" then
         ---@cast node IfExpression
-        
+
         return evalIfExpression(node)
     end
 end
-
-

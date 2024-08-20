@@ -8,7 +8,8 @@ local types = {
     BOOLEAN_OBJ = "BOOLEAN",
     NULL_OBJ = "NULL",
 
-    RETURN_VALUE_OBJ = "RETURN"
+    RETURN_VALUE_OBJ = "RETURN",
+    ERROR_OBJ = "ERROR"
 }
 
 ---@class BaseObject
@@ -82,6 +83,49 @@ function ReturnValue:Type()
     return types.RETURN_VALUE_OBJ
 end
 
+---@class Error: BaseObject
+---@field Message string
+---@field new fun(msg: string): Error
+local Error = oo.class(BaseObject)
+
+function Error:init(msg)
+    BaseObject.init(self)
+
+    self.Message = msg
+end
+
+function Error:Inspect()
+    return string.format("Error: %s", self.Message)
+end
+
+function Error:Type()
+    return types.ERROR_OBJ
+end
+
+---@class Environment
+---@field store {[string]: BaseObject}
+---@field new fun(): Environment
+---@field get fun(self: Environment, name: string): (BaseObject, boolean)
+---@field set fun(self: Environment, name: string, value: BaseObject): BaseObject
+-- really wanted a generic up there, but wont work :c
+local Environment = oo.class()
+
+function Environment:init()
+    self.store = {}
+end
+
+function Environment:get(name) 
+    local got = self.store[name]
+
+    return got, got ~= nil
+end
+
+function Environment:set(name, value)
+    self.store[name] = value
+
+    return value
+end
+
 ---@class Null: BaseObject
 ---@field new fun(): Null
 local Null = oo.class(BaseObject)
@@ -103,6 +147,9 @@ return {
     Boolean = Boolean,
     Null = Null,
     ReturnValue = ReturnValue,
+    Error = Error,
+
+    Environment = Environment,
 
     types = types
 }
