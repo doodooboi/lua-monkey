@@ -371,7 +371,7 @@ FunctionLiteral.__metatable = "FunctionLiteral"
 ---@class CallExpression: Expression
 ---@field Token token
 ---@field Function Expression
----@field Arguments Expression[]
+---@field Arguments Expression[]?
 ---@field new fun(token: token, fun: Expression, args: Expression[]): CallExpression
 CallExpression = oo.class(Expression)
 
