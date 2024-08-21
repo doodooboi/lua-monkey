@@ -2,9 +2,11 @@
 An implementation of the Monkey interpreted programming language using Lua 5.4
 
 ## Progress
-* Basic lexing
-* Basic parsing
-* Basic evaluation
+* Almost complete interpreter
+* If else statements
+* Function calls
+* Arithmetic 
+* Built-in functions (In Progress)
 
 ## Installation
 ### Usage
