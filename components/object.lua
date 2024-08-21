@@ -7,6 +7,7 @@ local types = {
     INTEGER_OBJ = "INTEGER",
     BOOLEAN_OBJ = "BOOLEAN",
     NULL_OBJ = "NULL",
+    FUNCTION_OBJ = "FUNCTION",
 
     RETURN_VALUE_OBJ = "RETURN",
     ERROR_OBJ = "ERROR"
@@ -124,6 +125,37 @@ function Environment:set(name, value)
     self.store[name] = value
 
     return value
+end
+
+---@class Function: BaseObject
+---@field Body BlockStatement
+---@field Parameters Identifier[]
+---@field Env Environment
+---@field new fun(body: BlockStatement, params: Identifier[], env: Environment): Function
+local Function = oo.class(BaseObject)
+
+function Function:init(body, params, env)
+    BaseObject.init(self)
+
+    
+end
+
+function Function:Inspect() 
+    local params = {}
+
+    for _, param in ipairs(self.Parameters) do
+        table.insert(params, tostring(param))
+    end
+
+    return string.format(
+        "fn(%s) {\n%s\n}",
+        table.concat(params, ", "),
+        tostring(self.Body)
+    )
+end
+
+function Function:Type()
+    return types.FUNCTION_OBJ
 end
 
 ---@class Null: BaseObject
