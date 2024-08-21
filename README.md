@@ -5,6 +5,7 @@ An implementation of the Monkey interpreted programming language using Lua 5.4
 * Almost complete interpreter
 * If else statements
 * Function calls
+* Environments
 * Arithmetic 
 * Built-in functions (In Progress)
 
