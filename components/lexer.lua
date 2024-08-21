@@ -85,6 +85,7 @@ function lexer:readChar(peek)
 
   self.position = self.readPosition
   self.readPosition = self.readPosition + 1
+  return self.char
 end
 
 function lexer:readIdenOrNumber(tok)
@@ -123,6 +124,8 @@ function lexer:nextToken()
     end
   elseif char == '' then
     token = newToken(tokens.EOF, "")
+  elseif char == "\"" then
+    token = newToken(tokens.STRING, self:readString())
   else
     if isLetter(char:byte()) then
       local literal = self:readIdenOrNumber("iden")
@@ -137,6 +140,29 @@ function lexer:nextToken()
 
   self:readChar()
   return token
+end
+
+function lexer:readString()
+  local escaped = false
+
+  local str = {}
+
+  while true do
+      local read = self:readChar()
+
+      if (not escaped and read == '"') or read == '\0' then
+          break
+      end
+
+      if read == "\\" and self:readChar(true) == "\"" then
+        escaped = true
+      else
+        table.insert(str, read)
+        escaped = false
+      end
+  end
+  
+  return table.concat(str)
 end
 
 function lexer:iterateTokens()

@@ -406,6 +406,32 @@ function CallExpression:__tostring()
 end
 CallExpression.__metatable = "CallExpression"
 
+---@class StringLiteral: Expression
+---@field Token token
+---@field Value string
+---@field new fun(token: token, str: string): StringLiteral
+StringLiteral = oo.class(Expression)
+
+function StringLiteral:init(token, str)
+	Expression.init(self)
+
+	self.Token = token
+	self.Value = str
+end
+
+function StringLiteral:expressionNode()
+	return
+end
+
+function StringLiteral:TokenLiteral()
+	return self.Token.Literal
+end
+
+function StringLiteral:__tostring()
+	return self.Token.Literal
+end
+StringLiteral.__metatable = "StringLiteral"
+
 ---@class Program: Node
 ---@field Statements Statement[]
 ---@field new fun(): Program

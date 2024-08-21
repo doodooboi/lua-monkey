@@ -37,7 +37,9 @@ local tokens = {
   RETURN = "RETURN",
 
   EQ = "==",
-  NOT_EQ = "!="
+  NOT_EQ = "!=",
+
+  STRING = "STRING"
 }
 
 local keywords = {

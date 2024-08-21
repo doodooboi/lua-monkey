@@ -109,8 +109,8 @@ end
 describe("the parser", function()
 	it("can do let statements", function()
 		local inputs = {
-			{ "let x = 5;", "x", 5 },
-			{ "let y = 10;", "y", 10 },
+			{ "let x = 5;",      "x",      5 },
+			{ "let y = 10;",     "y",      10 },
 			{ "let foobar = y;", "foobar", "y" }
 		}
 
@@ -118,7 +118,7 @@ describe("the parser", function()
 			local lex = lexer.new(test[1])
 			local parser = parser.new(lex)
 			local program = parser:ParseProgram()
-	
+
 			assert.is.truthy(program, "Invalid Program!")
 			assert.are_equal(1, #program.Statements, "Expected 1 statement!")
 
@@ -300,31 +300,31 @@ describe("the parser", function()
 	--TestOperatorPrecedenceParsing
 	it("can do advanced infix expressions", function()
 		local tests = {
-			{ "-a * b",                     "((-a) * b)", },
-			{ "!-a",                        "(!(-a))", },
-			{ "a + b + c",                  "((a + b) + c)", },
-			{ "a + b - c",                  "((a + b) - c)", },
-			{ "a * b * c",                  "((a * b) * c)", },
-			{ "a * b / c",                  "((a * b) / c)", },
-			{ "a + b / c",                  "(a + (b / c))", },
-			{ "a + b * c + d / e - f",      "(((a + (b * c)) + (d / e)) - f)", },
-			{ "3 + 4; -5 * 5",              "(3 + 4)((-5) * 5)", },
-			{ "5 > 4 == 3 < 4",             "((5 > 4) == (3 < 4))", },
-			{ "5 < 4 != 3 > 4",             "((5 < 4) != (3 > 4))", },
-			{ "3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))", },
-			{ "3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))", },
-			{ "true",                       "true" },
-			{ "false",                      "false" },
-			{ "3 > 5 == false",             "((3 > 5) == false)" },
-			{ "3 < 5 == true",              "((3 < 5) == true)" },
-			{ "1 + (2 + 3) + 4",            "((1 + (2 + 3)) + 4)" },
-			{ "(5 + 5) * 2",                "((5 + 5) * 2)" },
-			{ "2 / (5 + 5)",                "(2 / (5 + 5))" },
-			{ "-(5 + 5)",                   "(-(5 + 5))" },
-			{ "!(true == true)",            "(!(true == true))" },
-			{ "a + add(b * c) + d", "((a + add((b * c))) + d)" },
+			{ "-a * b",                                    "((-a) * b)", },
+			{ "!-a",                                       "(!(-a))", },
+			{ "a + b + c",                                 "((a + b) + c)", },
+			{ "a + b - c",                                 "((a + b) - c)", },
+			{ "a * b * c",                                 "((a * b) * c)", },
+			{ "a * b / c",                                 "((a * b) / c)", },
+			{ "a + b / c",                                 "(a + (b / c))", },
+			{ "a + b * c + d / e - f",                     "(((a + (b * c)) + (d / e)) - f)", },
+			{ "3 + 4; -5 * 5",                             "(3 + 4)((-5) * 5)", },
+			{ "5 > 4 == 3 < 4",                            "((5 > 4) == (3 < 4))", },
+			{ "5 < 4 != 3 > 4",                            "((5 < 4) != (3 > 4))", },
+			{ "3 + 4 * 5 == 3 * 1 + 4 * 5",                "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))", },
+			{ "3 + 4 * 5 == 3 * 1 + 4 * 5",                "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))", },
+			{ "true",                                      "true" },
+			{ "false",                                     "false" },
+			{ "3 > 5 == false",                            "((3 > 5) == false)" },
+			{ "3 < 5 == true",                             "((3 < 5) == true)" },
+			{ "1 + (2 + 3) + 4",                           "((1 + (2 + 3)) + 4)" },
+			{ "(5 + 5) * 2",                               "((5 + 5) * 2)" },
+			{ "2 / (5 + 5)",                               "(2 / (5 + 5))" },
+			{ "-(5 + 5)",                                  "(-(5 + 5))" },
+			{ "!(true == true)",                           "(!(true == true))" },
+			{ "a + add(b * c) + d",                        "((a + add((b * c))) + d)" },
 			{ "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
-			{ "add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))" }
+			{ "add(a + b + c * d / f + g)",                "add((((a + b) + ((c * d) / f)) + g))" }
 		}
 
 		for _, test in ipairs(tests) do
@@ -519,5 +519,35 @@ describe("the parser", function()
 		TestLiteralExpression(callExpr.Arguments[1], 1)
 		TestInfixExpression(callExpr.Arguments[2], 2, "*", 3)
 		TestInfixExpression(callExpr.Arguments[3], 4, "+", 5)
+	end)
+
+	it("can do strings", function()
+		local input = '"Hello, world!"'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local expr = stmt.Expression
+
+		expect("StringLiteral", expr)
+		---@cast expr StringLiteral
+		
+		assert.are_equal("Hello, world!", expr.Value, string.format(
+			"Expected string.Value to be %s, got %s",
+			input,
+			expr.Value
+		))
 	end)
 end)

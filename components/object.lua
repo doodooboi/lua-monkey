@@ -8,6 +8,7 @@ local types = {
 	BOOLEAN_OBJ = "BOOLEAN",
 	NULL_OBJ = "NULL",
 	FUNCTION_OBJ = "FUNCTION",
+	STRING_OBJ = "STRING",
 
 	RETURN_VALUE_OBJ = "RETURN",
 	ERROR_OBJ = "ERROR"
@@ -44,6 +45,25 @@ end
 
 function Integer:Type()
 	return types.INTEGER_OBJ
+end
+
+---@class String: BaseObject
+---@field Value number
+---@field new fun(value: string): String
+local String = oo.class(BaseObject)
+
+function String:init(value)
+	BaseObject.init(self)
+
+	self.Value = value
+end
+
+function String:Inspect()
+	return self.Value
+end
+
+function String:Type()
+	return types.STRING_OBJ
 end
 
 ---@class Boolean: BaseObject
@@ -186,6 +206,7 @@ return {
 	ReturnValue = ReturnValue,
 	Integer = Integer,
 	Boolean = Boolean,
+	String = String,
 	Error = Error,
 	Null = Null,
 

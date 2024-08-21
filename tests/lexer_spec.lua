@@ -87,18 +87,18 @@ describe("the lexer", function()
       5 < 10 > 5;
 		]]
 		local expects = {
-      {tokens.BANG, "!"},
-      {tokens.MINUS, "-"},
-      {tokens.DIV, "/"},
-      {tokens.MULT, "*"},
-      {tokens.INT, "5"},
-      {tokens.SEMICOLON, ";"},
-      {tokens.INT, "5"},
-      {tokens.LT, "<"},
-      {tokens.INT, "10"},
-      {tokens.GT, ">"},
-      {tokens.INT, "5"},
-      {tokens.SEMICOLON, ";"}
+			{ tokens.BANG,      "!" },
+			{ tokens.MINUS,     "-" },
+			{ tokens.DIV,       "/" },
+			{ tokens.MULT,      "*" },
+			{ tokens.INT,       "5" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.INT,       "5" },
+			{ tokens.LT,        "<" },
+			{ tokens.INT,       "10" },
+			{ tokens.GT,        ">" },
+			{ tokens.INT,       "5" },
+			{ tokens.SEMICOLON, ";" }
 		}
 
 		local tempLexer = lexer.new(input)
@@ -117,23 +117,23 @@ describe("the lexer", function()
     }
     ]]
 		local expects = {
-      {tokens.IF, "if"},
-      {tokens.LPAREN, "("},
-      {tokens.INT, "5"},
-      {tokens.LT, "<"},
-      {tokens.INT, "10"},
-      {tokens.RPAREN, ")"},
-      {tokens.LBRACE, "{"},
-      {tokens.RETURN, "return"},
-      {tokens.TRUE, "true"},
-      {tokens.SEMICOLON,";"},
-      {tokens.RBRACE, "}"},
-      {tokens.ELSE, "else"},
-      {tokens.LBRACE, "{"},
-      {tokens.RETURN, "return"},
-      {tokens.FALSE, "false"},
-      {tokens.SEMICOLON, ";"},
-      {tokens.RBRACE, "}"}
+			{ tokens.IF,        "if" },
+			{ tokens.LPAREN,    "(" },
+			{ tokens.INT,       "5" },
+			{ tokens.LT,        "<" },
+			{ tokens.INT,       "10" },
+			{ tokens.RPAREN,    ")" },
+			{ tokens.LBRACE,    "{" },
+			{ tokens.RETURN,    "return" },
+			{ tokens.TRUE,      "true" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.RBRACE,    "}" },
+			{ tokens.ELSE,      "else" },
+			{ tokens.LBRACE,    "{" },
+			{ tokens.RETURN,    "return" },
+			{ tokens.FALSE,     "false" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.RBRACE,    "}" }
 		}
 
 		local tempLexer = lexer.new(input)
@@ -147,22 +147,29 @@ describe("the lexer", function()
 		local input = [[
     10 == 10;
     10 != 9;
+	"foobar"
+	" foo  bar"
+	"I have nested quotes! \"omggg\""
     ]]
 		local expects = {
-      {tokens.INT, "10"},
-      {tokens.EQ, "=="},
-      {tokens.INT, "10"},
-      {tokens.SEMICOLON, ";"},
-      {tokens.INT, "10"},
-      {tokens.NOT_EQ, "!="},
-      {tokens.INT, "9"},
-      {tokens.SEMICOLON, ";"}
+			{ tokens.INT,       "10" },
+			{ tokens.EQ,        "==" },
+			{ tokens.INT,       "10" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.INT,       "10" },
+			{ tokens.NOT_EQ,    "!=" },
+			{ tokens.INT,       "9" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.STRING,    "foobar" },
+			{ tokens.STRING,    " foo  bar" },
+			{ tokens.STRING,    'I have nested quotes! "omggg"' }
 		}
 
 		local tempLexer = lexer.new(input)
-		for index, test in ipairs(expects) do
+		for _, test in ipairs(expects) do
 			local token = tempLexer:nextToken()
-			assert.are.same({ token.Type, token.Literal }, test)
+
+			assert.are.same(test, { token.Type, token.Literal })
 		end
 	end)
 end)

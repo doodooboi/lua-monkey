@@ -91,6 +91,7 @@ function parser:init(l)
 
 	self:registerPrefix(tokens.TRUE, self.parseBoolean)
 	self:registerPrefix(tokens.FALSE, self.parseBoolean)
+	self:registerPrefix(tokens.STRING, self.parseStringLiteral)
 
 	self:registerPrefix(tokens.LPAREN, self.parseGroupedExpression)
 
@@ -155,6 +156,10 @@ function parser:parseFunctionLiteral()
 	if not self:expectPeek(tokens.LBRACE) then return end
 
 	return FunctionLiteral.new(token, params, self:parseBlockStatement())
+end
+
+function parser:parseStringLiteral()
+	return StringLiteral.new(self.curToken, self.curToken.Literal)
 end
 
 function parser:parseCallExpression(fun)

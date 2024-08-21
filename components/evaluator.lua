@@ -314,6 +314,10 @@ function eval(node, env)
 		---@cast node BooleanLiteral
 
 		return boolToObject(node.Value)
+	elseif type == "StringLiteral" then
+		---@cast node StringLiteral
+		
+		return object.String.new(node.Value)
 	elseif type == "PrefixExpression" then
 		---@cast node PrefixExpression
 		local right = eval(node.Right, env)

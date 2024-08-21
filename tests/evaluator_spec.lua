@@ -246,4 +246,18 @@ describe("the evaluator", function()
 			testObject(testEval(test[1]), object.types.INTEGER_OBJ, test[2])
 		end
 	end)
+
+	it("can do strings", function()
+		local input = '"Hello, world!"'
+
+		local evaluated = testEval(input)
+		expect(object.types.STRING_OBJ, evaluated)
+
+		---@cast evaluated String
+		assert.are_equal("Hello, world!", evaluated.Value, string.format(
+			"String expected %s, got %s",
+			input,
+			evaluated.Value
+		))
+	end)
 end)
