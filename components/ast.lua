@@ -320,13 +320,11 @@ function BlockStatement:TokenLiteral()
 end
 
 function BlockStatement:__tostring()
-	local out = {"{"}
+	local out = {}
 
 	for _, statement in ipairs(self.Statements) do
 		table.insert(out, tostring(statement))
 	end
-
-	table.insert(out, "}")
 
 	return table.concat(out)
 end
@@ -362,7 +360,7 @@ function FunctionLiteral:__tostring()
 	end
 
 	return string.format(
-		'%s(%s) %s',
+		'%s(%s) {%s}',
 		self:TokenLiteral(),
 		table.concat(params, ', '),
 		tostring(self.Body)
