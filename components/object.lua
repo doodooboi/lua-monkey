@@ -4,13 +4,13 @@ local oo = require("utility.oo")
 
 ---@enum types
 local types = {
-    INTEGER_OBJ = "INTEGER",
-    BOOLEAN_OBJ = "BOOLEAN",
-    NULL_OBJ = "NULL",
-    FUNCTION_OBJ = "FUNCTION",
+	INTEGER_OBJ = "INTEGER",
+	BOOLEAN_OBJ = "BOOLEAN",
+	NULL_OBJ = "NULL",
+	FUNCTION_OBJ = "FUNCTION",
 
-    RETURN_VALUE_OBJ = "RETURN",
-    ERROR_OBJ = "ERROR"
+	RETURN_VALUE_OBJ = "RETURN",
+	ERROR_OBJ = "ERROR"
 }
 
 ---@class BaseObject
@@ -20,11 +20,11 @@ local BaseObject = oo.class()
 function BaseObject:init() end
 
 function BaseObject:Inspect()
-    return "BaseObject::Inspect must be overriden"
+	return "BaseObject::Inspect must be overriden"
 end
 
 function BaseObject:Type()
-    return "BaseObject::Type must be overriden"
+	return "BaseObject::Type must be overriden"
 end
 
 ---@class Integer: BaseObject
@@ -33,17 +33,17 @@ end
 local Integer = oo.class(BaseObject)
 
 function Integer:init(value)
-    BaseObject.init(self)
+	BaseObject.init(self)
 
-    self.Value = value
+	self.Value = value
 end
 
 function Integer:Inspect()
-    return tostring(self.Value)
+	return tostring(self.Value)
 end
 
 function Integer:Type()
-    return types.INTEGER_OBJ
+	return types.INTEGER_OBJ
 end
 
 ---@class Boolean: BaseObject
@@ -52,17 +52,17 @@ end
 local Boolean = oo.class(BaseObject)
 
 function Boolean:init(value)
-    BaseObject.init(self)
+	BaseObject.init(self)
 
-    self.Value = value
+	self.Value = value
 end
 
 function Boolean:Inspect()
-    return tostring(self.Value)
+	return tostring(self.Value)
 end
 
 function Boolean:Type()
-    return types.BOOLEAN_OBJ
+	return types.BOOLEAN_OBJ
 end
 
 ---@class ReturnValue: BaseObject
@@ -71,17 +71,17 @@ end
 local ReturnValue = oo.class(BaseObject)
 
 function ReturnValue:init(value)
-    BaseObject.init(self)
+	BaseObject.init(self)
 
-    self.Value = value
+	self.Value = value
 end
 
 function ReturnValue:Inspect()
-    return self.Value:Inspect()
+	return self.Value:Inspect()
 end
 
 function ReturnValue:Type()
-    return types.RETURN_VALUE_OBJ
+	return types.RETURN_VALUE_OBJ
 end
 
 ---@class Error: BaseObject
@@ -90,41 +90,47 @@ end
 local Error = oo.class(BaseObject)
 
 function Error:init(msg)
-    BaseObject.init(self)
+	BaseObject.init(self)
 
-    self.Message = msg
+	self.Message = msg
 end
 
 function Error:Inspect()
-    return string.format("Error: %s", self.Message)
+	return string.format("Error: %s", self.Message)
 end
 
 function Error:Type()
-    return types.ERROR_OBJ
+	return types.ERROR_OBJ
 end
 
 ---@class Environment
 ---@field store {[string]: BaseObject}
----@field new fun(): Environment
+---@field outer Environment?
+---@field new fun(outer: Environment?): Environment
 ---@field get fun(self: Environment, name: string): (BaseObject, boolean)
 ---@field set fun(self: Environment, name: string, value: BaseObject): BaseObject
 -- really wanted a generic up there, but wont work :c
 local Environment = oo.class()
 
-function Environment:init()
-    self.store = {}
+function Environment:init(outer)
+	self.store = {}
+	self.outer = outer
 end
 
-function Environment:get(name) 
-    local got = self.store[name]
+function Environment:get(name)
+	local got = self.store[name]
 
-    return got, got ~= nil
+	if got == nil and self.outer then
+		got = self.outer:get(name)
+	end
+
+	return got, got ~= nil
 end
 
 function Environment:set(name, value)
-    self.store[name] = value
+	self.store[name] = value
 
-    return value
+	return value
 end
 
 ---@class Function: BaseObject
@@ -135,27 +141,29 @@ end
 local Function = oo.class(BaseObject)
 
 function Function:init(body, params, env)
-    BaseObject.init(self)
+	BaseObject.init(self)
 
-    
+	self.Body = body
+	self.Parameters = params or {}
+	self.Env = env
 end
 
-function Function:Inspect() 
-    local params = {}
+function Function:Inspect()
+	local params = {}
 
-    for _, param in ipairs(self.Parameters) do
-        table.insert(params, tostring(param))
-    end
+	for _, param in ipairs(self.Parameters) do
+		table.insert(params, tostring(param))
+	end
 
-    return string.format(
-        "fn(%s) {\n%s\n}",
-        table.concat(params, ", "),
-        tostring(self.Body)
-    )
+	return string.format(
+		"fn(%s) {\n%s\n}",
+		table.concat(params, ", "),
+		tostring(self.Body)
+	)
 end
 
 function Function:Type()
-    return types.FUNCTION_OBJ
+	return types.FUNCTION_OBJ
 end
 
 ---@class Null: BaseObject
@@ -163,25 +171,27 @@ end
 local Null = oo.class(BaseObject)
 
 function Null:init()
-    BaseObject.init(self)
+	BaseObject.init(self)
 end
 
 function Null:Inspect()
-    return "null"
+	return "null"
 end
 
 function Null:Type()
-    return types.NULL_OBJ
+	return types.NULL_OBJ
 end
 
 return {
-    Integer = Integer,
-    Boolean = Boolean,
-    Null = Null,
-    ReturnValue = ReturnValue,
-    Error = Error,
+	ReturnValue = ReturnValue,
+	Integer = Integer,
+	Boolean = Boolean,
+	Error = Error,
+	Null = Null,
 
-    Environment = Environment,
+	Function = Function,
 
-    types = types
+	Environment = Environment,
+
+	types = types
 }

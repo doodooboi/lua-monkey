@@ -4,102 +4,102 @@ local object = require("components.object")
 require("utility.utility")
 
 local constants = {
-    TRUE = object.Boolean.new(true),
-    FALSE = object.Boolean.new(false),
-    NULL = object.Null.new()
+	TRUE = object.Boolean.new(true),
+	FALSE = object.Boolean.new(false),
+	NULL = object.Null.new()
 }
 
 ---@param bool boolean
 ---@return Boolean
 local function boolToObject(bool)
-    if bool then
-        return constants.TRUE
-    else
-        return constants.FALSE
-    end
+	if bool then
+		return constants.TRUE
+	else
+		return constants.FALSE
+	end
 end
 
 ---@param obj BaseObject
 ---@return boolean
 local function isError(obj)
-    if obj then
-        return obj:Type() == object.types.ERROR_OBJ
-    end
+	if obj then
+		return obj:Type() == object.types.ERROR_OBJ
+	end
 
-    return false
+	return false
 end
 
 ---@param format string
 ---@param ... string
 ---@return Error
 local function newError(format, ...)
-    return object.Error.new(string.format(format, ...))
+	return object.Error.new(string.format(format, ...))
 end
 
 ---@param node BaseObject
 ---@return boolean
 local function truthy(node)
-    if node == constants.FALSE or node == constants.NULL then
-        return false
-    end
+	if node == constants.FALSE or node == constants.NULL then
+		return false
+	end
 
-    return true
+	return true
 end
 
 ---@param node Program
 ---@param env Environment
 ---@return BaseObject
 local function evalProgram(node, env)
-    local result = nil
+	local result = nil
 
-    for _, stmt in ipairs(node.Statements) do
-        result = eval(stmt, env)
+	for _, stmt in ipairs(node.Statements) do
+		result = eval(stmt, env)
 
-        if result and result:Type() == object.types.RETURN_VALUE_OBJ then
-            ---@cast result ReturnValue
+		if result and result:Type() == object.types.RETURN_VALUE_OBJ then
+			---@cast result ReturnValue
 
-            return result.Value
-        elseif result and result:Type() == object.types.ERROR_OBJ then
-            return result
-        end
-    end
+			return result.Value
+		elseif result and result:Type() == object.types.ERROR_OBJ then
+			return result
+		end
+	end
 
-    return result
+	return result
 end
 
 ---@param right BaseObject
 local function evalBangOperatorExpression(right)
-    if right == constants.TRUE then
-        return constants.FALSE
-    elseif right == constants.FALSE or right == constants.NULL then
-        return constants.TRUE
-    end
+	if right == constants.TRUE then
+		return constants.FALSE
+	elseif right == constants.FALSE or right == constants.NULL then
+		return constants.TRUE
+	end
 
-    return constants.FALSE
+	return constants.FALSE
 end
 
 ---@param right BaseObject
 ---@return BaseObject
 local function evalMinusPrefixExpression(right)
-    if right:Type() ~= object.types.INTEGER_OBJ then
-        return newError("unknown operator: -%s", right:Type())
-    end
+	if right:Type() ~= object.types.INTEGER_OBJ then
+		return newError("unknown operator: -%s", right:Type())
+	end
 
-    ---@cast right Integer
-    return object.Integer.new(-right.Value)
+	---@cast right Integer
+	return object.Integer.new(-right.Value)
 end
 
 ---@param operator string
 ---@param right BaseObject
 ---@return BaseObject
 local function evalPrefixExpression(operator, right)
-    if operator == "!" then
-        return evalBangOperatorExpression(right)
-    elseif operator == '-' then
-        return evalMinusPrefixExpression(right)
-    end
+	if operator == "!" then
+		return evalBangOperatorExpression(right)
+	elseif operator == '-' then
+		return evalMinusPrefixExpression(right)
+	end
 
-    return newError("unknown operator: %s%s", operator, right:Type())
+	return newError("unknown operator: %s%s", operator, right:Type())
 end
 
 ---@param operator string
@@ -107,27 +107,27 @@ end
 ---@param right Integer
 ---@return BaseObject
 local function evalIntegerInfixExpression(operator, left, right)
-    if operator == "+" then
-        return object.Integer.new(left.Value + right.Value)
-    elseif operator == "-" then
-        return object.Integer.new(left.Value - right.Value)
-    elseif operator == "*" then
-        return object.Integer.new(left.Value * right.Value)
-    elseif operator == "/" then
-        return object.Integer.new(left.Value / right.Value)
-    end
+	if operator == "+" then
+		return object.Integer.new(left.Value + right.Value)
+	elseif operator == "-" then
+		return object.Integer.new(left.Value - right.Value)
+	elseif operator == "*" then
+		return object.Integer.new(left.Value * right.Value)
+	elseif operator == "/" then
+		return object.Integer.new(left.Value / right.Value)
+	end
 
-    if operator == "<" then
-        return boolToObject(left.Value < right.Value)
-    elseif operator == ">" then
-        return boolToObject(left.Value > right.Value)
-    elseif operator == "==" then
-        return boolToObject(left.Value == right.Value)
-    elseif operator == "!=" then
-        return boolToObject(left.Value ~= right.Value)
-    end
+	if operator == "<" then
+		return boolToObject(left.Value < right.Value)
+	elseif operator == ">" then
+		return boolToObject(left.Value > right.Value)
+	elseif operator == "==" then
+		return boolToObject(left.Value == right.Value)
+	elseif operator == "!=" then
+		return boolToObject(left.Value ~= right.Value)
+	end
 
-    return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
+	return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
 end
 
 
@@ -136,147 +136,226 @@ end
 ---@param right BaseObject
 ---@return BaseObject
 local function evalInfixExpression(operator, left, right)
-    if left:Type() == object.types.INTEGER_OBJ and right:Type() == object.types.INTEGER_OBJ then
-        ---@cast left Integer
-        ---@cast right Integer
+	if left:Type() == object.types.INTEGER_OBJ and right:Type() == object.types.INTEGER_OBJ then
+		---@cast left Integer
+		---@cast right Integer
 
-        return evalIntegerInfixExpression(operator, left, right)
-    end
+		return evalIntegerInfixExpression(operator, left, right)
+	end
 
-    if left:Type() ~= right:Type() then
-        return newError("type mismatch: %s %s %s", left:Type(), operator, right:Type())
-    end
+	if left:Type() ~= right:Type() then
+		return newError("type mismatch: %s %s %s", left:Type(), operator, right:Type())
+	end
 
-    if operator == "==" then
-        return boolToObject(left == right)
-    elseif operator == "!=" then
-        return boolToObject(left ~= right)
-    end
+	if operator == "==" then
+		return boolToObject(left == right)
+	elseif operator == "!=" then
+		return boolToObject(left ~= right)
+	end
 
-    return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
+	return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
 end
 
 ---@param node IfExpression
 ---@param env Environment
 ---@return BaseObject
 local function evalIfExpression(node, env)
-    local condition = eval(node.Condition, env)
-    if isError(condition) then
-        return condition
-    end
+	local condition = eval(node.Condition, env)
+	if isError(condition) then
+		return condition
+	end
 
-    if truthy(condition) then
-        return eval(node.Consequence, env)
-    elseif node.Alternative then
-        return eval(node.Alternative, env)
-    end
+	if truthy(condition) then
+		return eval(node.Consequence, env)
+	elseif node.Alternative then
+		return eval(node.Alternative, env)
+	end
 
-    return constants.NULL
+	return constants.NULL
 end
 
 ---@param node BlockStatement
 ---@param env Environment
 ---@return BaseObject
 local function evalBlockStatement(node, env)
-    local result = nil
+	local result = nil
 
-    for _, statement in ipairs(node.Statements) do
-        result = eval(statement, env)
+	for _, statement in ipairs(node.Statements) do
+		result = eval(statement, env)
 
-        if result and (result:Type() == object.types.RETURN_VALUE_OBJ or result:Type() == object.types.ERROR_OBJ) then
-            return result
-        end
-    end
+		if result and (result:Type() == object.types.RETURN_VALUE_OBJ or result:Type() == object.types.ERROR_OBJ) then
+			return result
+		end
+	end
 
-    return result
+	return result
 end
 
 ---@param node Identifier
 ---@param env Environment
 local function evalIdentifier(node, env)
-    local value, ok = env:get(node.Value)
+	local value, ok = env:get(node.Value)
 
-    if not ok then
-        return newError("identifier not found: %s", node.Value)
-    end
+	if not ok then
+		return newError("identifier not found: %s", node.Value)
+	end
 
-    return value
+	return value
+end
+
+---@param exprs Expression[]
+---@param env Environment
+---@return BaseObject[]
+local function evalExpressions(exprs, env)
+	local result = {}
+
+	for _, expr in ipairs(exprs) do
+		local evaluated = eval(expr, env)
+
+		if isError(evaluated) then
+			return { evaluated }
+		end
+
+		table.insert(result, evaluated)
+	end
+
+	return result
+end
+
+---@param node BaseObject
+---@return BaseObject
+local function unwrapReturnValue(node)
+	if node:Type() == object.types.RETURN_VALUE_OBJ then
+		---@cast node ReturnValue
+		
+		return node.Value
+	end
+
+	return node
+end
+
+---@param fn Function
+---@param args BaseObject[]
+---@return Environment
+local function extendFunctionEnv(fn, args)
+	local env = object.Environment.new(fn.Env)
+
+	for index, param in ipairs(fn.Parameters) do
+		env:set(param.Value, args[index])
+	end
+
+	return env
+end
+
+---@param fn BaseObject
+---@param args BaseObject[]
+---@return BaseObject
+local function applyFunction(fn, args)
+	if fn:Type() ~= object.types.FUNCTION_OBJ then
+		return newError("not a function: %s", fn:Type())
+	end
+	---@cast fn Function
+
+	local extendedEnv = extendFunctionEnv(fn, args)
+	local evaluated = eval(fn.Body, extendedEnv)
+
+	return unwrapReturnValue(evaluated)
 end
 
 ---@param node Node
 ---@param env Environment
 function eval(node, env)
-    local type = typeof(node)
+	local type = typeof(node)
 
-    -- Statements
-    if type == "Program" then
-        ---@cast node Program
-        return evalProgram(node, env)
-    elseif type == "ExpressionStatement" then
-        ---@cast node ExpressionStatement
-        return eval(node.Expression, env)
-    elseif type == "BlockStatement" then
-        ---@cast node BlockStatement
+	-- Statements
+	if type == "Program" then
+		---@cast node Program
+		return evalProgram(node, env)
+	elseif type == "ExpressionStatement" then
+		---@cast node ExpressionStatement
+		return eval(node.Expression, env)
+	elseif type == "BlockStatement" then
+		---@cast node BlockStatement
 
-        return evalBlockStatement(node, env)
-    elseif type == "ReturnStatement" then
-        ---@cast node ReturnStatement
-        local value = eval(node.ReturnValue, env)
+		return evalBlockStatement(node, env)
+	elseif type == "ReturnStatement" then
+		---@cast node ReturnStatement
+		local value = eval(node.ReturnValue, env)
 
-        if isError(value) then
-            return value
-        end
+		if isError(value) then
+			return value
+		end
 
-        return object.ReturnValue.new(value)
-    elseif type == "LetStatement" then
-        ---@cast node LetStatement
-        local value = eval(node.Value, env)
-        if isError(value) then
-            return value
-        end
+		return object.ReturnValue.new(value)
+	elseif type == "LetStatement" then
+		---@cast node LetStatement
+		local value = eval(node.Value, env)
+		if isError(value) then
+			return value
+		end
 
-        env:set(node.Name.Value, value)
-    end
+		env:set(node.Name.Value, value)
+	end
 
-    if type == "Identifier" then
-        ---@cast node Identifier
-        return evalIdentifier(node, env)
-    end
+	if type == "Identifier" then
+		---@cast node Identifier
+		return evalIdentifier(node, env)
+	elseif type == "FunctionLiteral" then
+		---@cast node FunctionLiteral
 
-    -- Expressions
-    if type == "IntegerLiteral" then
-        ---@cast node IntegerLiteral
-        return object.Integer.new(node.Value)
-    elseif type == "BooleanLiteral" then
-        ---@cast node BooleanLiteral
+		return object.Function.new(node.Body, node.Parameters, env)
+	end
 
-        return boolToObject(node.Value)
-    elseif type == "PrefixExpression" then
-        ---@cast node PrefixExpression
-        local right = eval(node.Right, env)
+	-- Expressions
+	if type == "IntegerLiteral" then
+		---@cast node IntegerLiteral
+		return object.Integer.new(node.Value)
+	elseif type == "BooleanLiteral" then
+		---@cast node BooleanLiteral
 
-        if isError(right) then
-            return right
-        end
+		return boolToObject(node.Value)
+	elseif type == "PrefixExpression" then
+		---@cast node PrefixExpression
+		local right = eval(node.Right, env)
 
-        return evalPrefixExpression(node.Operator, right)
-    elseif type == "InfixExpression" then
-        ---@cast node InfixExpression
+		if isError(right) then
+			return right
+		end
 
-        local left = eval(node.Left, env)
-        if isError(left) then
-            return left
-        end
+		return evalPrefixExpression(node.Operator, right)
+	elseif type == "InfixExpression" then
+		---@cast node InfixExpression
 
-        local right = eval(node.Right, env)
-        if isError(right) then
-            return right
-        end
+		local left = eval(node.Left, env)
+		if isError(left) then
+			return left
+		end
 
-        return evalInfixExpression(node.Operator, left, right)
-    elseif type == "IfExpression" then
-        ---@cast node IfExpression
+		local right = eval(node.Right, env)
+		if isError(right) then
+			return right
+		end
 
-        return evalIfExpression(node, env)
-    end
+		return evalInfixExpression(node.Operator, left, right)
+	elseif type == "IfExpression" then
+		---@cast node IfExpression
+
+		return evalIfExpression(node, env)
+	elseif type == "CallExpression" then
+		---@cast node CallExpression
+		
+		local fun = eval(node.Function, env)
+		---@cast fun Function
+
+		if isError(fun) then
+			return fun
+		end
+
+		local args = evalExpressions(node.Arguments, env)
+		if #args == 1 and isError(args[1]) then
+			return args[1]
+		end
+
+		return applyFunction(fun, args)
+	end
 end
