@@ -432,6 +432,37 @@ function StringLiteral:__tostring()
 end
 StringLiteral.__metatable = "StringLiteral"
 
+---@class AssignmentStatement: Statement
+---@field Token token 
+---@field Name Identifier
+---@field Value Expression
+---@field new fun(token: token, name: Identifier, value: Expression)
+AssignmentStatement = oo.class(Statement)
+
+---@param token token
+---@param name Identifier
+---@param value Expression
+function AssignmentStatement:init(token, name, value)
+	Statement.init(self)
+
+	self.Token = token
+	self.Name = name
+	self.Value = value
+end
+
+function AssignmentStatement:TokenLiteral()
+	return self.Token.Literal
+end
+
+function AssignmentStatement:__tostring()
+	return string.format(
+		'%s = %s;',
+		tostring(self.Name), -- name
+		tostring(self.Value or "?")
+	)
+end
+AssignmentStatement.__metatable = "AssignmentStatement"
+
 ---@class Program: Node
 ---@field Statements Statement[]
 ---@field new fun(): Program

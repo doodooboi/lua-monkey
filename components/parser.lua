@@ -244,8 +244,29 @@ function parser:parseStatement()
 	elseif self.curToken.Type == tokens.RETURN then
 		return self:parseReturnStatement()
 	else
+		if self.peekToken.Type == tokens.ASSIGN then
+			return self:parseAssignmentStatement()
+		end
+
 		return self:parseExpressionStatement()
 	end
+end
+
+function parser:parseAssignmentStatement()
+	local identToken = self.curToken
+	if not self:expectPeek(tokens.ASSIGN) then return end
+
+	self:nextToken()
+	local value = self:parseExpression(constants.LOWEST)
+
+	while self.curToken.Type ~= tokens.SEMICOLON and self.curToken.Type ~= tokens.EOF do
+		self:nextToken()
+	end
+
+	local identifier = ast.Identifier.new(identToken, identToken.Literal)
+
+	---@diagnostic disable-next-line: param-type-mismatch
+	return AssignmentStatement.new(identToken, identifier, value)
 end
 
 function parser:parseLetStatement()

@@ -199,6 +199,7 @@ local function evalInfixExpression(operator, left, right)
 		if byReferenceEquality[left:Type()] then
 			return boolToObject(left == right)
 		else
+			-- TODO: not do this
 			return boolToObject(true)
 		end
 	elseif operator == "!=" then
@@ -341,6 +342,19 @@ function eval(node, env)
 		return object.ReturnValue.new(value)
 	elseif type == "LetStatement" then
 		---@cast node LetStatement
+		local value = eval(node.Value, env)
+		if isError(value) then
+			return value
+		end
+
+		env:set(node.Name.Value, value)
+	elseif type == "AssignmentStatement" then
+		---@cast node AssignmentStatement
+		local ident = evalIdentifier(node.Name, env)
+		if isError(ident) then
+			return ident
+		end
+
 		local value = eval(node.Value, env)
 		if isError(value) then
 			return value
