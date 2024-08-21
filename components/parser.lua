@@ -62,7 +62,7 @@ local precedences = {
 ---@field private parseInfixExpression fun(self: Parser, left: Expression): Expression?
 ---@field private expectPeek fun(self: Parser, token: string): boolean
 ---@field private peekError fun(self: Parser, token: string): nil
----@field private parseBoolean fun(self: Parser): Boolean?
+---@field private parseBoolean fun(self: Parser): BooleanLiteral?
 ---@field private peekPrecedence fun(self: Parser): number
 ---@field private curPrecedence fun(self: Parser): number
 ---@field new fun(l: lexer): Parser

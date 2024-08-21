@@ -124,8 +124,8 @@ function lexer:nextToken()
     end
   elseif char == '' then
     token = newToken(tokens.EOF, "")
-  elseif char == "\"" then
-    token = newToken(tokens.STRING, self:readString())
+  elseif char == "\"" or char == '\'' then
+    token = newToken(tokens.STRING, self:readString(char))
   else
     if isLetter(char:byte()) then
       local literal = self:readIdenOrNumber("iden")
@@ -142,7 +142,7 @@ function lexer:nextToken()
   return token
 end
 
-function lexer:readString()
+function lexer:readString(initial)
   local escaped = false
 
   local str = {}
@@ -150,18 +150,19 @@ function lexer:readString()
   while true do
       local read = self:readChar()
 
-      if (not escaped and read == '"') or read == '\0' then
+      if (not escaped and read == initial) or read == '\0' then
           break
       end
 
-      if read == "\\" and self:readChar(true) == "\"" then
+      local peek = self:readChar(true)
+      if read == "\\" and (peek == '\'' or peek == "\"") then
         escaped = true
       else
         table.insert(str, read)
         escaped = false
       end
   end
-  
+
   return table.concat(str)
 end
 

@@ -147,6 +147,7 @@ local function evalInfixExpression(operator, left, right)
 		return newError("type mismatch: %s %s %s", left:Type(), operator, right:Type())
 	end
 
+	print(operator, left, typeof(left), right, typeof(right))
 	if operator == "==" then
 		return boolToObject(left == right)
 	elseif operator == "!=" then
