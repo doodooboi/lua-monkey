@@ -9,6 +9,11 @@ local constants = {
 	NULL = object.Null.new()
 }
 
+local byReferenceEquality = {
+	[object.types.BOOLEAN_OBJ] = true,
+	[object.types.NULL_OBJ] = true,
+}
+
 ---@param bool boolean
 ---@return Boolean
 local function boolToObject(bool)
@@ -102,6 +107,21 @@ local function evalPrefixExpression(operator, right)
 	return newError("unknown operator: %s%s", operator, right:Type())
 end
 
+---@param left BaseObject -- The left object being checked
+---@param right BaseObject -- The right object being checked
+---@param expectedType string? -- Optional type check
+---@return boolean -- True if both have the same type as each other
+local function sameType(left, right, expectedType)
+	local same = left:Type() == right:Type()
+	if not same then return false end
+
+	if expectedType then
+		return left:Type() == expectedType
+	end
+
+	return true
+end
+
 ---@param operator string
 ---@param left Integer
 ---@param right Integer
@@ -130,26 +150,57 @@ local function evalIntegerInfixExpression(operator, left, right)
 	return newError("unknown operator: %s %s %s", left:Type(), operator, right:Type())
 end
 
+---@param operator string
+---@param left String
+---@param right String
+---@return BaseObject
+local function evalStringInfixExpression(operator, left, right)
+	if operator == "+" then
+		-- actual concatenation is slow, and tables are faster
+		local str = { left.Value, right.Value }
+
+		return object.String.new(table.concat(str))
+	elseif operator == "==" then
+		return boolToObject(left.Value == right.Value)
+	elseif operator == "!=" then
+		return boolToObject(left.Value ~= right.Value)
+	end
+
+	return newError(
+		"unknown operator: %s %s %s",
+		left:Type(),
+		operator,
+		right:Type()
+	)
+end
 
 ---@param operator string
 ---@param left BaseObject
 ---@param right BaseObject
 ---@return BaseObject
 local function evalInfixExpression(operator, left, right)
-	if left:Type() == object.types.INTEGER_OBJ and right:Type() == object.types.INTEGER_OBJ then
+	if sameType(left, right, object.types.INTEGER_OBJ) then
 		---@cast left Integer
 		---@cast right Integer
 
 		return evalIntegerInfixExpression(operator, left, right)
 	end
 
-	if left:Type() ~= right:Type() then
+	if not sameType(left, right) then
 		return newError("type mismatch: %s %s %s", left:Type(), operator, right:Type())
 	end
 
-	print(operator, left, typeof(left), right, typeof(right))
+	if left:Type() == object.types.STRING_OBJ then
+		return evalStringInfixExpression(operator, left, right)
+	end
+
+	-- print(operator, left, typeof(left), right, typeof(right))
 	if operator == "==" then
-		return boolToObject(left == right)
+		if byReferenceEquality[left:Type()] then
+			return boolToObject(left == right)
+		else
+			return boolToObject(true)
+		end
 	elseif operator == "!=" then
 		return boolToObject(left ~= right)
 	end
@@ -228,7 +279,7 @@ end
 local function unwrapReturnValue(node)
 	if node:Type() == object.types.RETURN_VALUE_OBJ then
 		---@cast node ReturnValue
-		
+
 		return node.Value
 	end
 
@@ -317,7 +368,7 @@ function eval(node, env)
 		return boolToObject(node.Value)
 	elseif type == "StringLiteral" then
 		---@cast node StringLiteral
-		
+
 		return object.String.new(node.Value)
 	elseif type == "PrefixExpression" then
 		---@cast node PrefixExpression
@@ -348,7 +399,7 @@ function eval(node, env)
 		return evalIfExpression(node, env)
 	elseif type == "CallExpression" then
 		---@cast node CallExpression
-		
+
 		local fun = eval(node.Function, env)
 		---@cast fun Function
 

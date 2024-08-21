@@ -90,6 +90,7 @@ describe("the evaluator", function()
 			{ "(1 < 2) == false", false },
 			{ "(1 > 2) == true",  false },
 			{ "(1 > 2) == false", true },
+			{ '"Hello, world!" == "Hello" + ", " + "world!"', true }
 		}
 
 		for _, test in ipairs(tests) do
@@ -178,7 +179,8 @@ describe("the evaluator", function()
                 }
             ]], "unknown operator: BOOLEAN + BOOLEAN"
 			},
-			{ "foobar", "identifier not found: foobar" }
+			{ "foobar", "identifier not found: foobar" },
+			{ '"Hello" - "World"', "unknown operator: STRING - STRING"}
 		}
 
 		for _, test in ipairs(tests) do
@@ -257,6 +259,20 @@ describe("the evaluator", function()
 		assert.are_equal("Hello, world!", evaluated.Value, string.format(
 			"String expected %s, got %s",
 			input,
+			evaluated.Value
+		))
+	end)
+
+	it("can concatenate strings", function()
+		local input = '"Hello" + ", " + "world!"'
+
+		local evaluated = testEval(input)
+		expect(object.types.STRING_OBJ, evaluated)
+
+		---@cast evaluated String
+		assert.are_equal("Hello, world!", evaluated.Value, string.format(
+			"String expected %s, got %s",
+			"\"Hello, world!\"",
 			evaluated.Value
 		))
 	end)
