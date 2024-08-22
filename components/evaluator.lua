@@ -1,13 +1,8 @@
 ---@diagnostic disable: lowercase-global
 local object = require("components.object")
+local builtin = require("components.builtin")
 
 require("utility.utility")
-
-local constants = {
-	TRUE = object.Boolean.new(true),
-	FALSE = object.Boolean.new(false),
-	NULL = object.Null.new()
-}
 
 local byReferenceEquality = {
 	[object.types.BOOLEAN_OBJ] = true,
@@ -18,9 +13,9 @@ local byReferenceEquality = {
 ---@return Boolean
 local function boolToObject(bool)
 	if bool then
-		return constants.TRUE
+		return object.constants.TRUE
 	else
-		return constants.FALSE
+		return object.constants.FALSE
 	end
 end
 
@@ -44,7 +39,7 @@ end
 ---@param node BaseObject
 ---@return boolean
 local function truthy(node)
-	if node == constants.FALSE or node == constants.NULL then
+	if node == object.constants.FALSE or node == object.constants.NULL then
 		return false
 	end
 
@@ -74,13 +69,13 @@ end
 
 ---@param right BaseObject
 local function evalBangOperatorExpression(right)
-	if right == constants.TRUE then
-		return constants.FALSE
-	elseif right == constants.FALSE or right == constants.NULL then
-		return constants.TRUE
+	if right == object.constants.TRUE then
+		return object.constants.FALSE
+	elseif right == object.constants.FALSE or right == object.constants.NULL then
+		return object.constants.TRUE
 	end
 
-	return constants.FALSE
+	return object.constants.FALSE
 end
 
 ---@param right BaseObject
@@ -224,7 +219,7 @@ local function evalIfExpression(node, env)
 		return eval(node.Alternative, env)
 	end
 
-	return constants.NULL
+	return object.constants.NULL
 end
 
 ---@param node BlockStatement
@@ -248,12 +243,9 @@ end
 ---@param env Environment
 local function evalIdentifier(node, env)
 	local value, ok = env:get(node.Value)
+	if ok then return value end
 
-	if not ok then
-		return newError("identifier not found: %s", node.Value)
-	end
-
-	return value
+	return builtin[node.Value] or newError("identifier not found: %s", node.Value)
 end
 
 ---@param exprs Expression[]
@@ -304,8 +296,13 @@ end
 ---@param args BaseObject[]
 ---@return BaseObject
 local function applyFunction(fn, args)
-	if fn:Type() ~= object.types.FUNCTION_OBJ then
+	if fn:Type() ~= object.types.FUNCTION_OBJ and fn:Type() ~= object.types.BUILTIN_OBJ then
 		return newError("not a function: %s", fn:Type())
+	end
+
+	if fn:Type() == object.types.BUILTIN_OBJ then
+		---@cast fn Builtin
+		return fn.Fn(args)
 	end
 	---@cast fn Function
 
@@ -347,6 +344,10 @@ function eval(node, env)
 			return value
 		end
 
+		if builtin[node.Name.Value] then
+			return newError("cannot modify constant")
+		end
+
 		env:set(node.Name.Value, value)
 	elseif type == "AssignmentStatement" then
 		---@cast node AssignmentStatement
@@ -358,6 +359,10 @@ function eval(node, env)
 		local value = eval(node.Value, env)
 		if isError(value) then
 			return value
+		end
+
+		if builtin[node.Name.Value] then
+			return newError("cannot modify constant")
 		end
 
 		env:set(node.Name.Value, value)

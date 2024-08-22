@@ -7,7 +7,7 @@ require("utility.utility")
 require("components.evaluator")
 
 ---@param input string
----@return any
+---@return BaseObject
 local function testEval(input)
 	local lexed = lexer.new(input)
 	local parsed = parser.new(lexed)
@@ -275,5 +275,33 @@ describe("the evaluator", function()
 			"\"Hello, world!\"",
 			evaluated.Value
 		))
+	end)
+
+	-- Once hash maps get implemented, I want to add them builtins into those, rather than global
+	it("can call builtin functions", function()
+		local tests = {
+			{ 'len("")',            0 },
+			{ 'len("four")',        4 },
+			{ 'len("hello world")', 11 },
+			{ 'len(1)',             "expected STRING, got INTEGER" },
+			{ 'len("one", "two")',  "expected 1 argument, got 2" }
+		}
+
+		for _, test in ipairs(tests) do
+			local evaluated = testEval(test[1])
+			
+			if evaluated:Type() == object.types.INTEGER_OBJ then
+				testObject(evaluated, object.types.INTEGER_OBJ, test[2])
+			else
+				expect(object.types.ERROR_OBJ, evaluated)
+				---@cast evaluated Error
+				
+				assert.are_equal(test[2], evaluated.Message, string.format(
+					"Expected error '%s', got '%s'",
+					test[2],
+					evaluated.Message
+				))
+			end
+		end
 	end)
 end)

@@ -8,6 +8,7 @@ local types = {
 	BOOLEAN_OBJ = "BOOLEAN",
 	NULL_OBJ = "NULL",
 	FUNCTION_OBJ = "FUNCTION",
+	BUILTIN_OBJ = "BUILTIN",
 	STRING_OBJ = "STRING",
 
 	RETURN_VALUE_OBJ = "RETURN",
@@ -48,7 +49,7 @@ function Integer:Type()
 end
 
 ---@class String: BaseObject
----@field Value number
+---@field Value string
 ---@field new fun(value: string): String
 local String = oo.class(BaseObject)
 
@@ -121,6 +122,27 @@ end
 
 function Error:Type()
 	return types.ERROR_OBJ
+end
+
+---@alias BuiltinFunction fun(...: BaseObject): BaseObject
+
+---@class Builtin: BaseObject
+---@field Fn BuiltinFunction
+---@field new fun(fn: BuiltinFunction): Builtin
+local Builtin = oo.class(BaseObject)
+
+function Builtin:init(fn)
+	BaseObject.init(self)
+
+	self.Fn = fn
+end
+
+function Builtin:Inspect()
+	return "builtin function"
+end
+
+function Builtin:Type()
+	return types.BUILTIN_OBJ
 end
 
 ---@class Environment
@@ -202,6 +224,12 @@ function Null:Type()
 	return types.NULL_OBJ
 end
 
+local constants = {
+	TRUE = Boolean.new(true),
+	FALSE = Boolean.new(false),
+	NULL = Null.new()
+}
+
 return {
 	ReturnValue = ReturnValue,
 	Integer = Integer,
@@ -211,8 +239,10 @@ return {
 	Null = Null,
 
 	Function = Function,
+	Builtin = Builtin,
 
 	Environment = Environment,
 
-	types = types
+	types = types,
+	constants = constants,
 }
