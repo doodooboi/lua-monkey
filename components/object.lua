@@ -12,7 +12,9 @@ local types = {
 	STRING_OBJ = "STRING",
 
 	RETURN_VALUE_OBJ = "RETURN",
-	ERROR_OBJ = "ERROR"
+	ERROR_OBJ = "ERROR",
+
+	ARRAY_OBJ = "ARRAY"
 }
 
 ---@class BaseObject
@@ -208,6 +210,34 @@ function Function:Type()
 	return types.FUNCTION_OBJ
 end
 
+---@class Array: BaseObject
+---@field Elements BaseObject[]
+---@field new fun(elements: BaseObject[]): Array
+local Array = oo.class(BaseObject)
+
+function Array:init(elements)
+	BaseObject.init(self)
+
+	self.Elements = elements
+end
+
+function Array:Type()
+	return types.ARRAY_OBJ
+end
+
+function Array:Inspect()
+	local elements = {}
+
+	for _, elmnt in ipairs(self.Elements) do
+		table.insert(elements, elmnt:Inspect())
+	end
+
+	return string.format(
+		"[%s]",
+		table.concat(elements, ", ")
+	)
+end
+
 ---@class Null: BaseObject
 ---@field new fun(): Null
 local Null = oo.class(BaseObject)
@@ -242,6 +272,7 @@ return {
 	Builtin = Builtin,
 
 	Environment = Environment,
+	Array = Array,
 
 	types = types,
 	constants = constants,

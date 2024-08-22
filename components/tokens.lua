@@ -22,11 +22,17 @@ local tokens = {
 
   COMMA = ",",
   SEMICOLON = ";",
+  COLON = ":",
 
   LPAREN = "(",
   RPAREN = ")",
   LBRACE = "{",
   RBRACE = "}",
+
+  LBRACKET = "[",
+  RBRACKET = "]",
+
+  FOR = 'FOR',
 
   FUNCTION = "FUNCTION",
   LET = "LET",
@@ -49,7 +55,8 @@ local keywords = {
   ["false"] = tokens.FALSE,
   ["if"] = tokens.IF,
   ["else"] = tokens.ELSE,
-  ["return"] = tokens.RETURN
+  ["return"] = tokens.RETURN,
+  ["for"] = tokens.FOR
 }
 
 ---@param ident string The identifier to check for a reserved keyword

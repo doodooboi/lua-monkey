@@ -13,6 +13,7 @@ local constants = {
 	PRODUCT = 0x4,
 	PREFIX = 0x5,
 	CALL = 0x6,
+	INDEX = 0x7,
 }
 
 ---@enum precedence
@@ -29,7 +30,8 @@ local precedences = {
 	[tokens.DIV] = constants.PRODUCT,
 	[tokens.MULT] = constants.PRODUCT,
 
-	[tokens.LPAREN] = constants.CALL
+	[tokens.LPAREN] = constants.CALL,
+	[tokens.LBRACKET] = constants.INDEX
 }
 
 ---@generic K, V
@@ -65,6 +67,7 @@ local precedences = {
 ---@field private parseBoolean fun(self: Parser): BooleanLiteral?
 ---@field private peekPrecedence fun(self: Parser): number
 ---@field private curPrecedence fun(self: Parser): number
+---@field private parseExpressionList fun(self: Parser, endTokenType: string): Expression[]
 ---@field new fun(l: lexer): Parser
 local parser = oo.class()
 
@@ -92,6 +95,7 @@ function parser:init(l)
 	self:registerPrefix(tokens.TRUE, self.parseBoolean)
 	self:registerPrefix(tokens.FALSE, self.parseBoolean)
 	self:registerPrefix(tokens.STRING, self.parseStringLiteral)
+	self:registerPrefix(tokens.LBRACKET, self.parseArrayLiteral)
 
 	self:registerPrefix(tokens.LPAREN, self.parseGroupedExpression)
 
@@ -100,6 +104,7 @@ function parser:init(l)
 	end
 
 	self:registerInfix(tokens.LPAREN, self.parseCallExpression)
+	self:registerInfix(tokens.LBRACKET, self.parseIndexExpression)
 
 	-- read 2 tokens so curToken and peekToken are set
 	self:nextToken()
@@ -165,7 +170,54 @@ end
 function parser:parseCallExpression(fun)
 	local token = self.curToken
 
-	return CallExpression.new(token, fun, self:parseCallArguments())
+	return CallExpression.new(token, fun, self:parseExpressionList(tokens.RPAREN))
+end
+
+function parser:parseArrayLiteral()
+	local token = self.curToken
+
+	return ast.ArrayLiteral.new(token, self:parseExpressionList(tokens.RBRACKET))
+end
+
+function parser:parseIndexExpression(left)
+	local curToken = self.curToken
+	self:nextToken()
+
+	local index = self:parseExpression(constants.LOWEST)
+	if not self:expectPeek(tokens.RBRACKET) then
+		return nil
+	end
+
+	if self.peekToken.Type == tokens.ASSIGN then
+		return self:parseArrayIndexAssignmentStatement()
+	end
+
+	return ast.IndexExpression.new(curToken, left, index)
+end
+
+function parser:parseExpressionList(endTokenType)
+	local args = {}
+
+	if self.peekToken.Type == endTokenType then
+		self:nextToken()
+		return args
+	end
+
+	self:nextToken()
+	table.insert(args, self:parseExpression(constants.LOWEST))
+
+	while self.peekToken.Type == tokens.COMMA do
+		self:nextToken()
+		self:nextToken()
+
+		table.insert(args, self:parseExpression(constants.LOWEST))
+	end
+
+	if not self:expectPeek(endTokenType) then
+		return
+	end
+
+	return args
 end
 
 function parser:parseCallArguments()
@@ -238,7 +290,6 @@ function parser:parseBlockStatement()
 end
 
 function parser:parseStatement()
-	-- print("::parseStatement token: ".. self.curToken.Type)
 	if self.curToken.Type == tokens.LET then
 		return self:parseLetStatement()
 	elseif self.curToken.Type == tokens.RETURN then
@@ -250,6 +301,10 @@ function parser:parseStatement()
 
 		return self:parseExpressionStatement()
 	end
+end
+
+function parser:parseArrayIndexAssignmentStatement(identifier, index)
+
 end
 
 function parser:parseAssignmentStatement()

@@ -463,6 +463,67 @@ function AssignmentStatement:__tostring()
 end
 AssignmentStatement.__metatable = "AssignmentStatement"
 
+---@class ArrayLiteral: Expression
+---@field Token token
+---@field Elements Expression[]
+---@field new fun(token: token, elements: Expression[]): ArrayLiteral
+local ArrayLiteral = oo.class(Expression)
+
+function ArrayLiteral:init(token, elements)
+	Expression.init(self)
+
+	self.Token = token
+	self.Elements = elements
+end
+
+function ArrayLiteral:expressionNode()
+	return
+end
+
+function ArrayLiteral:TokenLiteral()
+	return self.Token.Literal
+end
+
+function ArrayLiteral:__tostring()
+	local elements = {}
+
+	for _, elmnt in ipairs(self.Elements) do
+		table.insert(elements, tostring(elmnt))
+	end
+
+	return string.format(
+		"[%s]",
+		table.concat(elements, ", ")
+	)
+end
+ArrayLiteral.__metatable = "ArrayLiteral"
+
+---@class IndexExpression: Expression
+---@field Token token
+---@field Left Expression
+---@field Index Expression
+---@field new fun(token: token, left: Expression, index: Expression)
+local IndexExpression = oo.class(Expression)
+
+function IndexExpression:init(token, left, index)
+	Expression.init(self)
+
+	self.Token = token
+	self.Left = left
+	self.Index = index
+end
+
+function IndexExpression:expressionNode() return end
+
+function IndexExpression:__tostring()
+	return string.format(
+		"(%s[%s])",
+		tostring(self.Left),
+		tostring(self.Index)
+	)	
+end
+IndexExpression.__metatable = "IndexExpression"
+
 ---@class Program: Node
 ---@field Statements Statement[]
 ---@field new fun(): Program
@@ -488,6 +549,7 @@ function Program:__tostring()
 end
 Program.__metatable = "Program"
 
+-- TODO: Sort by type
 return {
 	Program = Program,
 	LetStatement = LetStatement,
@@ -498,5 +560,8 @@ return {
 	IntegerLiteral = IntegerLiteral,
 	PrefixExpression = PrefixExpression,
 	InfixExpression = InfixExpression,
-	Boolean = Boolean
+	Boolean = Boolean,
+
+	ArrayLiteral = ArrayLiteral,
+	IndexExpression = IndexExpression
 }

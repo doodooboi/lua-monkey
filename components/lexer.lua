@@ -26,7 +26,10 @@ local singleOperators = {
   ["("] = newToken(tokens.LPAREN, "("),
   [")"] = newToken(tokens.RPAREN, ")"),
   ["{"] = newToken(tokens.LBRACE, "{"),
-  ["}"] = newToken(tokens.RBRACE, "}")
+  ["}"] = newToken(tokens.RBRACE, "}"),
+  ["["] = newToken(tokens.LBRACKET, "["),
+  ["]"] = newToken(tokens.RBRACKET, "]"),
+  [":"] = newToken(tokens.COLON, ":")
 }
 
 ---@class lexer

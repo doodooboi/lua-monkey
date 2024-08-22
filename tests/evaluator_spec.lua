@@ -71,25 +71,25 @@ describe("the evaluator", function()
 
 	it("can do boolean expressions", function()
 		local tests = {
-			{ "true",             true },
-			{ "false",            false },
-			{ "1 < 2",            true },
-			{ "1 > 2",            false },
-			{ "1 < 1",            false },
-			{ "1 > 1",            false },
-			{ "1 == 1",           true },
-			{ "1 != 1",           false },
-			{ "1 == 2",           false },
-			{ "1 != 2",           true },
-			{ "true == true",     true },
-			{ "false == false",   true },
-			{ "true == false",    false },
-			{ "true != false",    true },
-			{ "false != true",    true },
-			{ "(1 < 2) == true",  true },
-			{ "(1 < 2) == false", false },
-			{ "(1 > 2) == true",  false },
-			{ "(1 > 2) == false", true },
+			{ "true",                                         true },
+			{ "false",                                        false },
+			{ "1 < 2",                                        true },
+			{ "1 > 2",                                        false },
+			{ "1 < 1",                                        false },
+			{ "1 > 1",                                        false },
+			{ "1 == 1",                                       true },
+			{ "1 != 1",                                       false },
+			{ "1 == 2",                                       false },
+			{ "1 != 2",                                       true },
+			{ "true == true",                                 true },
+			{ "false == false",                               true },
+			{ "true == false",                                false },
+			{ "true != false",                                true },
+			{ "false != true",                                true },
+			{ "(1 < 2) == true",                              true },
+			{ "(1 < 2) == false",                             false },
+			{ "(1 > 2) == true",                              false },
+			{ "(1 > 2) == false",                             true },
 			{ '"Hello, world!" == "Hello" + ", " + "world!"', true }
 		}
 
@@ -179,8 +179,8 @@ describe("the evaluator", function()
                 }
             ]], "unknown operator: BOOLEAN + BOOLEAN"
 			},
-			{ "foobar", "identifier not found: foobar" },
-			{ '"Hello" - "World"', "unknown operator: STRING - STRING"}
+			{ "foobar",            "identifier not found: foobar" },
+			{ '"Hello" - "World"', "unknown operator: STRING - STRING" }
 		}
 
 		for _, test in ipairs(tests) do
@@ -289,18 +289,62 @@ describe("the evaluator", function()
 
 		for _, test in ipairs(tests) do
 			local evaluated = testEval(test[1])
-			
+
 			if evaluated:Type() == object.types.INTEGER_OBJ then
 				testObject(evaluated, object.types.INTEGER_OBJ, test[2])
 			else
 				expect(object.types.ERROR_OBJ, evaluated)
 				---@cast evaluated Error
-				
+
 				assert.are_equal(test[2], evaluated.Message, string.format(
 					"Expected error '%s', got '%s'",
 					test[2],
 					evaluated.Message
 				))
+			end
+		end
+	end)
+
+	it("can evaluate array indexing", function()
+		local input = "[1, 2 * 2, 3 + 3]"
+
+		local evaluated = testEval(input)
+		expect(object.types.ARRAY_OBJ, evaluated)
+
+		---@cast evaluated Array
+
+		assert.are_equal(3, #evaluated.Elements, string.format(
+			"Expected %s elements, got %s",
+			3,
+			#evaluated.Elements
+		))
+
+		testObject(evaluated.Elements[1], object.types.INTEGER_OBJ, 1)
+		testObject(evaluated.Elements[2], object.types.INTEGER_OBJ, 4)
+		testObject(evaluated.Elements[3], object.types.INTEGER_OBJ, 6)
+	end)
+
+	it("can really index arrays", function()
+		local tests = {
+			{ "[1, 2, 3][0]",                                                   1 },
+			{ "[1, 2, 3][1]",                                                   2 },
+			{ "[1, 2, 3][2]",                                                   3 },
+			{ "let i = 0; [1][i];",                                             1 },
+			{ "[1, 2, 3][1 + 1];",                                              3 },
+			{ "let myArray = [1, 2, 3]; myArray[2];",                           3 },
+			{ "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", 6 },
+			{ "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",        2 },
+			{ "[1, 2, 3][3]",                                                   nil },
+			{ "[1, 2, 3][-1]",                                                  nil },
+		}
+
+		for _, test in ipairs(tests) do
+			local evaluated = testEval(test[1])
+
+			if test[2] then
+				testObject(evaluated, object.types.INTEGER_OBJ, test[2])
+			else
+				testObject(evaluated, object.types.NULL_OBJ)
 			end
 		end
 	end)

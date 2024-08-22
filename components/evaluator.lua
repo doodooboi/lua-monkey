@@ -312,6 +312,32 @@ local function applyFunction(fn, args)
 	return unwrapReturnValue(evaluated)
 end
 
+---@param left Array
+---@param index Integer
+---@return BaseObject
+local function evalArrayIndexExpression(left, index)
+	local idx = index.Value
+	local max = #left.Elements - 1
+
+	if idx < 0 or idx > max then
+		return object.constants.NULL
+	end
+
+	return left.Elements[idx + 1]
+end
+
+---@param left BaseObject
+---@param index BaseObject
+---@return BaseObject
+local function evalIndexExpression(left, index)
+	if left:Type() == object.types.ARRAY_OBJ and index:Type() == object.types.INTEGER_OBJ then
+		---@diagnostic disable-next-line: param-type-mismatch
+		return evalArrayIndexExpression(left, index)
+	end
+
+	return newError("index operator not supported: %s", left:Type())
+end
+
 ---@param node Node
 ---@param env Environment
 function eval(node, env)
@@ -366,6 +392,14 @@ function eval(node, env)
 		end
 
 		env:set(node.Name.Value, value)
+	elseif type == "ArrayLiteral" then
+		---@cast node ArrayLiteral
+		local elements = evalExpressions(node.Elements, env)
+		if #elements == 1 and isError(elements[1]) then
+			return elements[1]
+		end
+
+		return object.Array.new(elements)
 	end
 
 	if type == "Identifier" then
@@ -412,6 +446,19 @@ function eval(node, env)
 		end
 
 		return evalInfixExpression(node.Operator, left, right)
+	elseif type == "IndexExpression" then
+		---@cast node IndexExpression
+		local left = eval(node.Left, env)
+		if isError(left) then
+			return left
+		end
+
+		local index = eval(node.Index, env)
+		if isError(index) then
+			return index
+		end
+
+		return evalIndexExpression(left, index)
 	elseif type == "IfExpression" then
 		---@cast node IfExpression
 

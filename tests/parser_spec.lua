@@ -324,7 +324,9 @@ describe("the parser", function()
 			{ "!(true == true)",                           "(!(true == true))" },
 			{ "a + add(b * c) + d",                        "((a + add((b * c))) + d)" },
 			{ "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
-			{ "add(a + b + c * d / f + g)",                "add((((a + b) + ((c * d) / f)) + g))" }
+			{ "add(a + b + c * d / f + g)",                "add((((a + b) + ((c * d) / f)) + g))" },
+			{ "a * [1, 2, 3, 4][b * c] * d",               "((a * ([1, 2, 3, 4][(b * c)])) * d)" },
+			{ "add(a * b[2], b[1], 2 * [1, 2][1])",        "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))" },
 		}
 
 		for _, test in ipairs(tests) do
@@ -538,16 +540,75 @@ describe("the parser", function()
 
 		expect("ExpressionStatement", stmt)
 		---@cast stmt ExpressionStatement
-		
+
 		local expr = stmt.Expression
 
 		expect("StringLiteral", expr)
 		---@cast expr StringLiteral
-		
+
 		assert.are_equal("Hello, world!", expr.Value, string.format(
 			"Expected string.Value to be %s, got %s",
 			input,
 			expr.Value
 		))
+	end)
+
+	it("can do arrays", function()
+		local input = "[1, 2*2, 3+3]"
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+
+		local expr = stmt.Expression
+		expect("ArrayLiteral", expr)
+		---@cast expr ArrayLiteral
+
+		assert.are_equal(3, #expr.Elements, string.format(
+			"Expected %s array elements, got %s",
+			3,
+			#expr.Elements
+		))
+
+		TestLiteralExpression(expr.Elements[1], 1)
+		TestInfixExpression(expr.Elements[2], 2, "*", 2)
+		TestInfixExpression(expr.Elements[3], 3, "+", 3)
+	end)
+
+	it("can do array indexing", function()
+		local input = "myArray[1 + 1]"
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+
+		local expr = stmt.Expression
+		expect("IndexExpression", expr)
+		---@cast expr IndexExpression
+
+		testIdentifier(expr.Left, "myArray")
+		TestInfixExpression(expr.Index, 1, "+", 1)
 	end)
 end)

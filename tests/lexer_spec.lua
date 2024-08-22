@@ -150,6 +150,8 @@ describe("the lexer", function()
 	"foobar"
 	" foo  bar"
 	"I have nested quotes! \"omggg\""
+	[1, 2];
+	{"foo": "bar"}
     ]]
 		local expects = {
 			{ tokens.INT,       "10" },
@@ -162,7 +164,19 @@ describe("the lexer", function()
 			{ tokens.SEMICOLON, ";" },
 			{ tokens.STRING,    "foobar" },
 			{ tokens.STRING,    " foo  bar" },
-			{ tokens.STRING,    'I have nested quotes! "omggg"' }
+			{ tokens.STRING,    'I have nested quotes! "omggg"' },
+			{ tokens.LBRACKET,   "[" },
+			{ tokens.INT,        "1" },
+			{ tokens.COMMA,      "," },
+			{ tokens.INT,        "2" },
+			{ tokens.RBRACKET,   "]" },
+			{ tokens.SEMICOLON,  ";" },
+			{ tokens.LBRACE, '{'},
+			{ tokens.STRING, "foo"},
+			{ tokens.COLON, ":"},
+			{ tokens.STRING, "bar"},
+			{ tokens.RBRACE, "}"},
+			{ tokens.EOF, ""}
 		}
 
 		local tempLexer = lexer.new(input)
