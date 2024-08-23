@@ -35,6 +35,10 @@ function repl.Start()
 
       local program = parsed:ParseProgram()
       if #parsed.errors > 0 then
+        for _, stmt in ipairs(program.Statements) do
+          -- print(typeof(stmt), serializeTable(stmt))
+        end
+        
         print("Encountered " .. #parsed.errors .. " parsing errors!")
         for _, err in ipairs(parsed.errors) do
           print("  " .. err)
