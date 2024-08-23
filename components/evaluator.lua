@@ -330,7 +330,7 @@ local function evalIndexExpression(left, index)
 		---@cast left Array
 		---@cast index Integer
 
-		return left.Elements[index.Value + 1]
+		return left.Elements[index.Value + 1] or object.constants.NULL
 	end
 
 	return newError("index operator not supported: %s", left:Type())
