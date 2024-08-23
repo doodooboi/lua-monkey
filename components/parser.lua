@@ -68,6 +68,7 @@ local precedences = {
 ---@field private peekPrecedence fun(self: Parser): number
 ---@field private curPrecedence fun(self: Parser): number
 ---@field private parseExpressionList fun(self: Parser, endTokenType: string): Expression[]
+---@field private parseArrayIndexAssignmentStatement fun(self: Parser, curToken: token, identifier: Identifier, Index: Expression)
 ---@field new fun(l: lexer): Parser
 local parser = oo.class()
 
@@ -184,15 +185,25 @@ function parser:parseIndexExpression(left)
 	self:nextToken()
 
 	local index = self:parseExpression(constants.LOWEST)
-	if not self:expectPeek(tokens.RBRACKET) then
+	if not self:expectPeek(tokens.RBRACKET) or not index then
 		return nil
 	end
 
 	if self.peekToken.Type == tokens.ASSIGN then
-		return self:parseArrayIndexAssignmentStatement()
+		self:nextToken()
+		return self:parseArrayIndexAssignmentStatement(curToken, left, index)
 	end
 
 	return ast.IndexExpression.new(curToken, left, index)
+end
+
+function parser:parseArrayIndexAssignmentStatement(curToken, identifier, index)
+	self:nextToken()
+
+	local value = self:parseExpression(constants.LOWEST)
+	if not value then return end
+
+	return ast.ArrayIndexExpression.new(curToken, identifier, index, value)
 end
 
 function parser:parseExpressionList(endTokenType)
@@ -301,10 +312,6 @@ function parser:parseStatement()
 
 		return self:parseExpressionStatement()
 	end
-end
-
-function parser:parseArrayIndexAssignmentStatement(identifier, index)
-
 end
 
 function parser:parseAssignmentStatement()

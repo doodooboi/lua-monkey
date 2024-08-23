@@ -312,18 +312,14 @@ local function applyFunction(fn, args)
 	return unwrapReturnValue(evaluated)
 end
 
----@param left Array
+---@param arr Array
 ---@param index Integer
----@return BaseObject
-local function evalArrayIndexExpression(left, index)
+---@return boolean
+local function arrayIndexInBounds(arr, index)
 	local idx = index.Value
-	local max = #left.Elements - 1
+	local max = #arr.Elements - 1
 
-	if idx < 0 or idx > max then
-		return object.constants.NULL
-	end
-
-	return left.Elements[idx + 1]
+	return not (idx < 0 or idx > max)
 end
 
 ---@param left BaseObject
@@ -331,11 +327,32 @@ end
 ---@return BaseObject
 local function evalIndexExpression(left, index)
 	if left:Type() == object.types.ARRAY_OBJ and index:Type() == object.types.INTEGER_OBJ then
-		---@diagnostic disable-next-line: param-type-mismatch
-		return evalArrayIndexExpression(left, index)
+		---@cast left Array
+		---@cast index Integer
+
+		return left.Elements[index.Value + 1]
 	end
 
 	return newError("index operator not supported: %s", left:Type())
+end
+
+---@param arr BaseObject
+---@param index BaseObject
+---@param value BaseObject
+---@return BaseObject
+local function evalIndexAssignmentExpression(arr, index, value)
+	if
+		arr:Type() == object.types.ARRAY_OBJ and
+		index:Type() == object.types.INTEGER_OBJ
+	then
+		---@cast arr Array
+		---@cast index Integer
+
+		arr.Elements[index.Value + 1] = value
+		return
+	end
+
+	return newError("index operator not supported: %s", index:Type())
 end
 
 ---@param node Node
@@ -459,6 +476,25 @@ function eval(node, env)
 		end
 
 		return evalIndexExpression(left, index)
+	elseif type == "ArrayIndexExpression" then
+		---@cast node ArrayIndexExpression
+		local array = eval(node.Array, env)
+		if isError(array) then
+			return array
+		end
+
+		local index = eval(node.Index, env)
+		if isError(index) then
+			return index
+		end
+
+		local value = eval(node.Value, env)
+		if isError(value) then
+			return value
+		end
+
+		evalIndexAssignmentExpression(array, index, value)
+		return
 	elseif type == "IfExpression" then
 		---@cast node IfExpression
 

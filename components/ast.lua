@@ -524,6 +524,37 @@ function IndexExpression:__tostring()
 end
 IndexExpression.__metatable = "IndexExpression"
 
+
+
+---@class ArrayIndexExpression: Expression
+---@field Token token
+---@field Array Expression
+---@field Index Expression
+---@field Value Expression
+---@field new fun(token: token, array: Expression, index: Expression, value: Expression)
+local ArrayIndexExpression = oo.class(Expression)
+
+function ArrayIndexExpression:init(token, array, index, value)
+	Expression.init(self)
+
+	self.Token = token
+	self.Array = array
+	self.Index = index
+	self.Value = value
+end
+
+function ArrayIndexExpression:expressionNode() return end
+
+function ArrayIndexExpression:__tostring()
+	return string.format(
+		"(%s[%s] = %s)",
+		tostring(self.Array),
+		tostring(self.Index),
+		tostring(self.Value)
+	)	
+end
+ArrayIndexExpression.__metatable = "ArrayIndexExpression"
+
 ---@class Program: Node
 ---@field Statements Statement[]
 ---@field new fun(): Program
@@ -563,5 +594,6 @@ return {
 	Boolean = Boolean,
 
 	ArrayLiteral = ArrayLiteral,
-	IndexExpression = IndexExpression
+	IndexExpression = IndexExpression,
+	ArrayIndexExpression = ArrayIndexExpression
 }
