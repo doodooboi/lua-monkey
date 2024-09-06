@@ -148,11 +148,11 @@ function Builtin:Type()
 end
 
 ---@class Environment
----@field store {[string]: BaseObject}
+---@field store {[string]: {value: BaseObject, const: boolean}}
 ---@field outer Environment?
 ---@field new fun(outer: Environment?): Environment
----@field get fun(self: Environment, name: string): (BaseObject, boolean)
----@field set fun(self: Environment, name: string, value: BaseObject): BaseObject
+---@field get fun(self: Environment, name: string): ({value: BaseObject, const: boolean}, boolean)
+---@field set fun(self: Environment, name: string, value: BaseObject, const: boolean): BaseObject
 -- really wanted a generic up there, but wont work :c
 local Environment = oo.class()
 
@@ -171,8 +171,8 @@ function Environment:get(name)
 	return got, got ~= nil
 end
 
-function Environment:set(name, value)
-	self.store[name] = value
+function Environment:set(name, value, const)
+	self.store[name] = {value = value, const = const}
 
 	return value
 end
@@ -237,6 +237,9 @@ function Array:Inspect()
 		table.concat(elements, ", ")
 	)
 end
+
+---@class Hash: BaseObject
+---@field new fun()
 
 ---@class Null: BaseObject
 ---@field new fun(): Null

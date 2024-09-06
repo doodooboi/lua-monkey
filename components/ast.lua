@@ -1,5 +1,8 @@
 local oo = require("utility.oo")
 
+-- TODO: Clean up
+-- Lots of unnecessary stuff and can be simplified
+
 -- Define the Node class
 ---@class Node
 ---@field TokenLiteral fun(self: Node): string
@@ -69,18 +72,21 @@ Identifier.__metatable = "Identifier"
 ---@field Token token -- LET
 ---@field Name Identifier
 ---@field Value Expression
----@field new fun(token: token, name: Identifier, value: Expression)
+---@field Constant boolean
+---@field new fun(token: token, name: Identifier, value: Expression, const: boolean)
 LetStatement = oo.class(Statement)
 
 ---@param token token
 ---@param name Identifier
 ---@param value Expression
-function LetStatement:init(token, name, value)
+---@param const boolean
+function LetStatement:init(token, name, value, const)
 	Statement.init(self)
 
 	self.Token = token
 	self.Name = name
 	self.Value = value
+	self.Constant = const
 end
 
 function LetStatement:TokenLiteral()
@@ -555,6 +561,38 @@ function ArrayIndexExpression:__tostring()
 end
 ArrayIndexExpression.__metatable = "ArrayIndexExpression"
 
+---@class HashLiteral: Expression
+---@field Token token
+---@field Pairs {[Expression]: Expression}
+---@field new fun(token: token, elements: {[Expression]: Expression}): HashLiteral
+local HashLiteral = oo.class(Expression)
+
+function HashLiteral:init(token, elements)
+	Expression.init(self)
+
+	self.Token = token
+	self.Pairs = elements
+end
+
+function HashLiteral:TokenLiteral()
+	return self.Token.Literal
+end
+
+function HashLiteral:expressionNode()
+	return
+end
+
+function HashLiteral:__tostring()
+	local record = {}
+
+	for key, value in pairs(self.Pairs) do
+		table.insert(record, tostring(key)..": "..tostring(value))
+	end
+
+	return string.format("{%s}", table.concat(record, ", "))
+end
+HashLiteral.__metatable = "HashLiteral"
+
 ---@class Program: Node
 ---@field Statements Statement[]
 ---@field new fun(): Program
@@ -595,5 +633,6 @@ return {
 
 	ArrayLiteral = ArrayLiteral,
 	IndexExpression = IndexExpression,
-	ArrayIndexExpression = ArrayIndexExpression
+	ArrayIndexExpression = ArrayIndexExpression,
+	HashLiteral = HashLiteral,
 }

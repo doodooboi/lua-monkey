@@ -243,7 +243,7 @@ end
 ---@param env Environment
 local function evalIdentifier(node, env)
 	local value, ok = env:get(node.Value)
-	if ok then return value end
+	if ok then return value.value end
 
 	return builtin[node.Value] or newError("identifier not found: %s", node.Value)
 end
@@ -286,7 +286,7 @@ local function extendFunctionEnv(fn, args)
 	local env = object.Environment.new(fn.Env)
 
 	for index, param in ipairs(fn.Parameters) do
-		env:set(param.Value, args[index])
+		env:set(param.Value, args[index], false)
 	end
 
 	return env
@@ -391,7 +391,12 @@ function eval(node, env)
 			return newError("cannot modify constant")
 		end
 
-		env:set(node.Name.Value, value)
+		local got, ok = env:get(node.Name.Value)
+		if ok and got.const then
+			return newError("cannot modify constant")
+		end
+
+		env:set(node.Name.Value, value, node.Constant)
 	elseif type == "AssignmentStatement" then
 		---@cast node AssignmentStatement
 		local ident = evalIdentifier(node.Name, env)
@@ -408,7 +413,12 @@ function eval(node, env)
 			return newError("cannot modify constant")
 		end
 
-		env:set(node.Name.Value, value)
+		local got = env:get(node.Name.Value)
+		if got.const then
+			return newError("cannot modify constant")
+		end
+
+		env:set(node.Name.Value, value, false)
 	elseif type == "ArrayLiteral" then
 		---@cast node ArrayLiteral
 		local elements = evalExpressions(node.Elements, env)

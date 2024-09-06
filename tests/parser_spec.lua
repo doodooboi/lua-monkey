@@ -611,4 +611,219 @@ describe("the parser", function()
 		testIdentifier(expr.Left, "myArray")
 		TestInfixExpression(expr.Index, 1, "+", 1)
 	end)
+
+	it("can parse hash string keys", function()
+		local input = '{"one": 1, "two": 2, "three": 3}'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local hash = stmt.Expression
+		expect("HashLiteral", hash)
+		---@cast hash HashLiteral
+		
+		assert.are_equal(3, len(hash.Pairs), string.format(
+			"Expected 3 indexes, got %s",
+			len(hash.Pairs)
+		))
+		
+		local testRecord = {
+			one = 1,
+			two = 2,
+			three = 3
+		}
+
+		for key, value in pairs(hash.Pairs) do
+			expect("StringLiteral", key)
+			---@cast key StringLiteral
+			
+			local got = testRecord[tostring(key)]
+			testIntegerLiteral(value, got)
+		end
+	end)
+
+	it("can parse hash integer keys", function()
+		local input = '{1: 1, 2: 2, 3: 3}'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local hash = stmt.Expression
+		expect("HashLiteral", hash)
+		---@cast hash HashLiteral
+		
+		assert.are_equal(3, len(hash.Pairs), string.format(
+			"Expected 3 indexes, got %s",
+			len(hash.Pairs)
+		))
+		
+		local testRecord = {
+			[1] = 1,
+			[2] = 2,
+			[3] = 3
+		}
+
+		
+
+		for key, value in pairs(hash.Pairs) do
+			expect("IntegerLiteral", key)
+			---@cast key IntegerLiteral
+			
+			local got = testRecord[key.Value]
+			testIntegerLiteral(value, got)
+		end
+	end)
+
+	it("can parse hash boolean keys", function()
+		local input = '{true: 1, false: 2}'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local hash = stmt.Expression
+		expect("HashLiteral", hash)
+		---@cast hash HashLiteral
+		
+		assert.are_equal(2, len(hash.Pairs), string.format(
+			"Expected 2 indexes, got %s",
+			len(hash.Pairs)
+		))
+		
+		local testRecord = {
+			[true] = 1,
+			[false] = 2,
+		}
+
+		for key, value in pairs(hash.Pairs) do
+			expect("BooleanLiteral", key)
+			---@cast key BooleanLiteral
+			
+			local got = testRecord[key.Value]
+			testIntegerLiteral(value, got)
+		end
+	end)
+
+	it("can do an empty hash", function()
+		local input = '{}'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local hash = stmt.Expression
+		expect("HashLiteral", hash)
+		---@cast hash HashLiteral
+		
+		assert.are_equal(0, len(hash.Pairs), string.format(
+			"Expected 0 indexes, got %s",
+			len(hash.Pairs)
+		))
+	end)
+
+	it("can parse hash expression keys", function()
+		local input = '{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+
+		local stmt = program.Statements[1]
+		expect("ExpressionStatement", stmt)
+		---@cast stmt ExpressionStatement
+		
+		local hash = stmt.Expression
+		expect("HashLiteral", hash)
+		---@cast hash HashLiteral
+		
+		assert.are_equal(3, len(hash.Pairs), string.format(
+			"Expected 3 indexes, got %s",
+			len(hash.Pairs)
+		))
+
+		---@type {[string]: fun(e: Expression)}
+		local testRecord = {
+			one = function (e)
+				TestInfixExpression(e, 0, "+", 1)
+			end,
+
+			two = function (e)
+				TestInfixExpression(e, 10, "-", 8)
+			end,
+
+			three = function (e)
+				TestInfixExpression(e, 15, "/", 5)
+			end
+		}
+
+		for key, value in pairs(hash.Pairs) do
+			expect("StringLiteral", key)
+			---@cast key StringLiteral
+			
+			local got = testRecord[key.Value]
+			got(value)
+		end
+	end)
+
+	it("can parse constants", function()
+		local input = 'let const x = 5'
+
+		local lex = lexer.new(input)
+		local parser = parser.new(lex)
+		local program = parser:ParseProgram()
+
+		assert.are_equal(0, #parser.errors, string.format(
+			'Expected 0 errors, got %s!\nErrors:\n  %s\n',
+			#parser.errors,
+			tostring(parser.errors)
+		))
+	end)
 end)

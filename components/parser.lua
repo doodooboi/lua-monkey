@@ -97,6 +97,7 @@ function parser:init(l)
 	self:registerPrefix(tokens.FALSE, self.parseBoolean)
 	self:registerPrefix(tokens.STRING, self.parseStringLiteral)
 	self:registerPrefix(tokens.LBRACKET, self.parseArrayLiteral)
+	self:registerPrefix(tokens.LBRACE, self.parseHashLiteral)
 
 	self:registerPrefix(tokens.LPAREN, self.parseGroupedExpression)
 
@@ -195,6 +196,46 @@ function parser:parseIndexExpression(left)
 	end
 
 	return ast.IndexExpression.new(curToken, left, index)
+end
+
+function parser:parseHashLiteral() 
+	local curToken = self.curToken
+	local pairs = {}
+
+	while self.peekToken.Type ~= tokens.RBRACE do
+		self:nextToken()
+		-- print("start", self.curToken)
+
+		local key = self:parseExpression(constants.LOWEST)
+
+		if not self:expectPeek(tokens.COLON) then
+			return
+		end
+
+		self:nextToken()
+		local value = self:parseExpression(constants.LOWEST)
+		-- print(string.format("{[%s(%s)]: %s(%s)}", tostring(key), typeof(key), tostring(value), typeof(value)))
+		if key == nil or value == nil then return end
+
+		pairs[key] = value
+		-- print("peeking", self.peekToken)
+		if self.peekToken.Type ~= tokens.RBRACE and self.peekToken.Type ~= tokens.COMMA then
+			return
+		end
+
+		if self.peekToken.Type == tokens.COMMA then
+			self:nextToken()
+		end
+		-- print("nxt loop")
+	end
+
+	if not self:expectPeek(tokens.RBRACE) then
+		return
+	end
+
+
+
+	return ast.HashLiteral.new(curToken, pairs)
 end
 
 function parser:parseArrayIndexAssignmentStatement(curToken, identifier, index)
@@ -333,6 +374,12 @@ end
 
 function parser:parseLetStatement()
 	local startToken = self.curToken -- The LET token
+	local const = self.peekToken.Type == tokens.CONSTANT
+
+	if const then
+		self:nextToken()
+	end
+
 	if not self:expectPeek(tokens.IDENT) then return end
 
 	local identToken = self.curToken
@@ -349,7 +396,7 @@ function parser:parseLetStatement()
 	local identifier = ast.Identifier.new(identToken, identToken.Literal)
 
 	---@diagnostic disable-next-line: param-type-mismatch
-	return ast.LetStatement.new(startToken, identifier, value)
+	return ast.LetStatement.new(startToken, identifier, value, const or false)
 end
 
 function parser:parseGroupedExpression()

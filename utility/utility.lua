@@ -44,3 +44,13 @@ function serializeTable(val, name, skipnewlines, depth)
 
 	return tmp
 end
+
+function len(tbl)
+	local size = 0
+
+	for _ in pairs(tbl) do
+		size = size + 1
+	end
+
+	return size
+end

@@ -41,6 +41,7 @@ local tokens = {
   IF = "IF",
   ELSE = "ELSE",
   RETURN = "RETURN",
+  CONSTANT = "CONST",
 
   EQ = "==",
   NOT_EQ = "!=",
@@ -56,7 +57,8 @@ local keywords = {
   ["if"] = tokens.IF,
   ["else"] = tokens.ELSE,
   ["return"] = tokens.RETURN,
-  ["for"] = tokens.FOR
+  ["for"] = tokens.FOR,
+  ["const"] = tokens.CONSTANT,
 }
 
 ---@param ident string The identifier to check for a reserved keyword

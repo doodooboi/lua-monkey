@@ -143,7 +143,7 @@ describe("the lexer", function()
 		end
 	end)
 
-	it("can do a equality check", function()
+	it("can fully lex", function()
 		local input = [[
     10 == 10;
     10 != 9;
@@ -151,7 +151,9 @@ describe("the lexer", function()
 	" foo  bar"
 	"I have nested quotes! \"omggg\""
 	[1, 2];
-	{"foo": "bar"}
+	{"foo": "bar", "test": 1}
+	{1: 2};
+	let const x = 5
     ]]
 		local expects = {
 			{ tokens.INT,       "10" },
@@ -165,18 +167,33 @@ describe("the lexer", function()
 			{ tokens.STRING,    "foobar" },
 			{ tokens.STRING,    " foo  bar" },
 			{ tokens.STRING,    'I have nested quotes! "omggg"' },
-			{ tokens.LBRACKET,   "[" },
-			{ tokens.INT,        "1" },
-			{ tokens.COMMA,      "," },
-			{ tokens.INT,        "2" },
-			{ tokens.RBRACKET,   "]" },
-			{ tokens.SEMICOLON,  ";" },
-			{ tokens.LBRACE, '{'},
-			{ tokens.STRING, "foo"},
-			{ tokens.COLON, ":"},
-			{ tokens.STRING, "bar"},
-			{ tokens.RBRACE, "}"},
-			{ tokens.EOF, ""}
+			{ tokens.LBRACKET,  "[" },
+			{ tokens.INT,       "1" },
+			{ tokens.COMMA,     "," },
+			{ tokens.INT,       "2" },
+			{ tokens.RBRACKET,  "]" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.LBRACE,    '{' },
+			{ tokens.STRING,    "foo" },
+			{ tokens.COLON,     ":" },
+			{ tokens.STRING,    "bar" },
+			{ tokens.COMMA,     ',' },
+			{ tokens.STRING,    "test" },
+			{ tokens.COLON,     ":" },
+			{ tokens.INT,       "1" },
+			{ tokens.RBRACE,    "}" },
+			{ tokens.LBRACE,    "{" },
+			{ tokens.INT,       "1" },
+			{ tokens.COLON,     ":" },
+			{ tokens.INT,       "2" },
+			{ tokens.RBRACE,    "}" },
+			{ tokens.SEMICOLON, ";" },
+			{ tokens.LET,       "let" },
+			{ tokens.CONSTANT,  "const" },
+			{ tokens.IDENT,     "x" },
+			{ tokens.ASSIGN,    "=" },
+			{ tokens.INT,       "5" },
+			{ tokens.EOF,       "" }
 		}
 
 		local tempLexer = lexer.new(input)
