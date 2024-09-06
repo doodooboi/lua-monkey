@@ -239,11 +239,22 @@ local function evalBlockStatement(node, env)
 	return result
 end
 
+-- flag that gets set to true when we do an ArrayIndexExpression on Array
+local modifyingArray = false
+
 ---@param node Identifier
 ---@param env Environment
 local function evalIdentifier(node, env)
 	local value, ok = env:get(node.Value)
-	if ok then return value.value end
+	if ok then
+		if modifyingArray and value.const then
+			modifyingArray = false
+			return newError("cannot modify constant")
+		end
+
+		modifyingArray = false
+		return value.value
+	end
 
 	return builtin[node.Value] or newError("identifier not found: %s", node.Value)
 end
@@ -487,6 +498,7 @@ function eval(node, env)
 
 		return evalIndexExpression(left, index)
 	elseif type == "ArrayIndexExpression" then
+		modifyingArray = true
 		---@cast node ArrayIndexExpression
 		local array = eval(node.Array, env)
 		if isError(array) then
